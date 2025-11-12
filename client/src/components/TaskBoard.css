@@ -626,5 +626,46 @@ body.dark .chat-input-area button:disabled { background-color: #555; }
 .chat-input-area button:hover:not(:disabled) {
     background-color: var(--secondary-color);
 }
+.task-board {
+  /* Tùy chỉnh để 4 cột vừa vặn hơn trên màn hình lớn */
+  /* Bạn có thể giữ nguyên nếu muốn 4 cột tràn ra */
+  justify-content: flex-start; /* Mặc định */
+}
 
+.task-column {
+  min-width: 300px; /* Giảm độ rộng tối thiểu một chút */
+  max-width: 340px; /* Giữ nguyên max-width */
+  width: 24%; /* Chia 4 cột */
+}
 
+/* Sửa lỗi trên màn hình nhỏ hơn khi có 4 cột */
+@media (max-width: 1300px) {
+  .task-column {
+    min-width: 280px; /* Cho phép co lại nhiều hơn */
+    width: 270px;
+  }
+}
+.column-content {
+  flex-grow: 1; /* Đảm bảo nó lấp đầy không gian */
+  min-height: 100px; /* Chiều cao tối thiểu để có thể thả vào */
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+/* Placeholder cho cột rỗng */
+.empty-column-placeholder {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-secondary-color);
+  font-size: 14px;
+  font-style: italic;
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+/* Hiệu ứng khi kéo thẻ QUA cột */
+.column-content.droppable-over-column {
+  background-color: rgba(102, 126, 234, 0.1); /* Màu highlight (giống Workspace) */
+}

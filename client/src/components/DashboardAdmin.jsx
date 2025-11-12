@@ -1,300 +1,456 @@
 import React, { useState, useEffect } from 'react';
-import './Dashboard.css';
-import { BsCheckCircleFill, BsCircle, BsFire, BsTrophy, BsClock, BsCalendar3, BsPlus, BsTrash } from 'react-icons/bs';
-import { IoTrendingUp, IoFlash, IoClose } from 'react-icons/io5';
-
-// --- (CODE MỚI) IMPORT ---
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-// --- KẾT THÚC CODE MỚI ---
+import './DashboardAdmin.css'; 
+import { 
+  BsFillGrid3X3GapFill, BsPeopleFill, BsFileEarmarkTextFill, 
+  BsBoxArrowRight, BsPlusCircleFill, BsTrash, BsPencil,
+  BsExclamationOctagonFill, // (MỚI) Icon Báo cáo
+  BsShieldCheck, // (MỚI) Icon Bỏ qua
+} from 'react-icons/bs';
+import { IoClose } from 'react-icons/io5';
+import axios from 'axios';
 
-const Dashboard = () => {
-  // --- (CODE MỚI) GỌI HOOK ---
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+// ===== COMPONENT SIDEBAR (ĐÃ SỬA) =====
+const AdminSidebar = ({ onLogout, activeView, setActiveView }) => {
   const { t } = useTranslation();
-  // --- KẾT THÚC CODE MỚI ---
+  
+  return (
+    <nav className="admin-sidebar">
+      <div className="admin-sidebar-header">
+        <span className="admin-logo">STMSUAI</span>
+        <span className="admin-title">Admin Panel</span>
+      </div>
+      <ul className="admin-nav-list">
+        {/* Nút 1: Dashboard (Mặc định) */}
+        <li 
+          className={`admin-nav-item ${activeView === 'dashboard' ? 'active' : ''}`}
+          onClick={() => setActiveView('dashboard')}
+        >
+          <BsFillGrid3X3GapFill />
+          <span>Dashboard</span>
+        </li>
+        {/* Nút 2: User Bị báo cáo */}
+        <li 
+          className={`admin-nav-item ${activeView === 'reported_users' ? 'active' : ''}`}
+          onClick={() => setActiveView('reported_users')}
+        >
+          <BsPeopleFill />
+          <span>User Bị báo cáo</span>
+        </li>
+        {/* Nút 3: Bài viết Bị báo cáo */}
+        <li 
+          className={`admin-nav-item ${activeView === 'reported_posts' ? 'active' : ''}`}
+          onClick={() => setActiveView('reported_posts')}
+        >
+          <BsExclamationOctagonFill />
+          <span>Bài viết Bị báo cáo</span>
+        </li>
+      </ul>
+      <div className="admin-sidebar-footer">
+        <button className="admin-logout-btn" onClick={onLogout}>
+          <BsBoxArrowRight />
+          <span>Đăng xuất</span>
+        </button>
+      </div>
+    </nav>
+  );
+};
+// ===== KẾT THÚC SỬA SIDEBAR =====
 
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [username, setUsername] = useState("User"); // Đổi tên mặc định
+// (Modal giữ nguyên)
+const AdminModal = ({ title, children, onClose }) => (
+  <div className="admin-modal-overlay" onClick={onClose}>
+    <div className="admin-modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="admin-modal-header">
+        <h3>{title}</h3>
+        <button onClick={onClose} className="admin-modal-close-btn"><IoClose /></button>
+      </div>
+      <div className="admin-modal-body">{children}</div>
+    </div>
+  </div>
+);
 
+
+// ===== COMPONENT CHÍNH: DashboardAdmin =====
+const DashboardAdmin = ({ onLogout }) => {
+  const { t, i18n } = useTranslation();
+  const token = localStorage.getItem('token'); 
+
+  // (MỚI) State để điều khiển giao diện
+  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard', 'reported_users', 'reported_posts'
+
+  const [stats, setStats] = useState({ totalUsers: 0, totalPosts: 0, newUsers: 0 });
+  const [users, setUsers] = useState([]); // State cho TẤT CẢ user
+  const [posts, setPosts] = useState([]); // State cho TẤT CẢ bài viết
+  const [reports, setReports] = useState([]); // (MỚI) State cho Báo cáo
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [modalState, setModalState] = useState({ isOpen: false, type: null, data: null });
+  const [formData, setFormData] = useState({});
+
+  const authHeader = { headers: { 'Authorization': `Bearer ${token}` } };
+
+  // (ĐÃ SỬA) useEffect sẽ tải TẤT CẢ data (cả báo cáo)
   useEffect(() => {
-    try {
-      const userString = localStorage.getItem("user");
-      if (userString) {
-        const userData = JSON.parse(userString);
-        setUsername(userData.username);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [statsRes, usersRes, postsRes, reportsRes] = await Promise.all([
+          axios.get(`${API_URL}/api/admin/stats`, authHeader),
+          axios.get(`${API_URL}/api/admin/users`, authHeader),
+          axios.get(`${API_URL}/api/admin/posts`, authHeader),
+          axios.get(`${API_URL}/api/admin/reports/posts`, authHeader), // (MỚI) Tải báo cáo
+        ]);
+        
+        setStats(statsRes.data);
+        setUsers(usersRes.data);
+        setPosts(postsRes.data);
+        setReports(reportsRes.data); // (MỚI) Lưu báo cáo
+        
+      } catch (err) {
+        console.error("Lỗi khi tải dữ liệu admin:", err);
+        if (err.response?.status === 401 || err.response?.status === 403) {
+            alert("Phiên đăng nhập hết hạn hoặc không có quyền. Vui lòng đăng nhập lại.");
+            onLogout(); 
+        } else {
+            setError("Không thể tải dữ liệu. Vui lòng thử lại.");
+        }
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      console.error("Lỗi khi đọc user từ localStorage:", e);
+    };
+    
+    if (token) {
+        fetchData(); 
     }
-  }, []);
+  }, [token, onLogout]);
+  
+  // (Các hàm CRUD và Modal giữ nguyên)
+  const openModal = (type, data = null) => {
+    setModalState({ isOpen: true, type, data });
+    if (type === 'editUser' && data) { setFormData(data); } 
+    else if (type === 'addUser') { setFormData({ username: '', email: '', password: '', role: 'user' }); }
+    else { setFormData({}); }
+  };
+  const closeModal = () => setModalState({ isOpen: false, type: null, data: null });
+  const handleFormChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post(`${API_URL}/api/admin/users`, formData, authHeader);
+      setUsers([...users, res.data]); // Cập nhật state 'users'
+      closeModal();
+    } catch (err) { alert("Lỗi: " + err.response?.data?.message); }
+  };
+  const handleEditUser = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.put(`${API_URL}/api/admin/users/${modalState.data.user_id}`, formData, authHeader);
+      setUsers(users.map(u => (u.user_id === res.data.user_id ? res.data : u))); // Cập nhật state 'users'
+      closeModal();
+    } catch (err) { alert("Lỗi: " + err.response?.data?.message); }
+  };
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Bạn có chắc muốn xóa user này?")) return;
+    try {
+      await axios.delete(`${API_URL}/api/admin/users/${userId}`, authHeader);
+      setUsers(users.filter(u => u.user_id !== userId)); // Cập nhật state 'users'
+    } catch (err) { alert("Lỗi: " + err.response?.data?.message); }
+  };
+  const handleDeletePost = async (postId) => {
+    if (!window.confirm("Bạn có chắc muốn xóa bài viết này?")) return;
+    try {
+      await axios.delete(`${API_URL}/api/admin/posts/${postId}`, authHeader);
+      setPosts(posts.filter(p => p.post_id !== postId)); // Cập nhật state 'posts'
+    } catch (err) { alert("Lỗi: " + err.response?.data?.message); }
+  };
+  
+  // (MỚI) Hàm xử lý báo cáo
+  const handleResolveReport = async (reportId, action) => {
+    const confirmationText = action === 'delete' 
+      ? "Bạn có chắc muốn XÓA bài viết này vĩnh viễn?" 
+      : "Bạn có chắc muốn BỎ QUA báo cáo này?";
+      
+    if (!window.confirm(confirmationText)) return;
 
-  // Tasks state management (Dữ liệu mẫu)
-  const [tasks, setTasks] = useState([
-    { id: 1, title: 'Hoàn thành bài tập React', deadline: '2 giờ', priority: 'high', completed: false },
-    { id: 2, title: 'Đọc tài liệu NodeJS', deadline: 'Hôm nay', priority: 'medium', completed: false },
-    { id: 3, title: 'Review code dự án', deadline: 'Mai', priority: 'low', completed: true }, // 1 completed
-  ]);
-
-  // Modal state
-  const [showTaskModal, setShowTaskModal] = useState(false);
-  const [newTask, setNewTask] = useState({
-    title: '',
-    deadline: '',
-    priority: 'medium'
-  });
-
-  // Mock data - Dữ liệu demo
-  const stats = {
-    tasksCompleted: tasks.filter(t => t.completed).length,
-    totalTasks: tasks.length,
-    studyStreak: 7,
-    pomodoroSessions: 8,
-    weeklyGoal: 40,
-    currentWeek: 28
+    try {
+      await axios.put(`${API_URL}/api/admin/reports/resolve/${reportId}`, { action }, authHeader);
+      // Xóa báo cáo khỏi danh sách UI
+      setReports(reports.filter(r => r.report_id !== reportId));
+      
+      // (Nâng cao) Nếu action là 'delete', xóa post đó khỏi bảng 'posts' luôn
+      if (action === 'delete') {
+          const report = reports.find(r => r.report_id === reportId);
+          if (report) {
+              setPosts(posts.filter(p => p.post_id !== report.post.post_id));
+          }
+      }
+      alert(`Đã xử lý báo cáo (Hành động: ${action})`);
+    } catch (err) {
+      alert("Lỗi: " + err.response?.data?.message);
+    }
   };
 
-  const upcomingTasks = tasks.filter(t => !t.completed);
-
-  // Mock hoạt động
-  const recentActivities = [
-    { id: 1, text: 'Hoàn thành 4 Pomodoro sessions', time: '10 phút trước', icon: '✅' },
-    { id: 2, text: 'Tham gia Study Room "Web Dev"', time: '1 giờ trước', icon: '📚' },
-    { id: 3, text: 'Đạt mốc 7 ngày học liên tục', time: '2 giờ trước', icon: '🔥' },
-  ];
-
-  // (Đã xóa mảng quote cố định, giờ dùng t())
-
-  const completionRate = stats.totalTasks > 0 ? Math.round((stats.tasksCompleted / stats.totalTasks) * 100) : 0;
-  const weeklyProgress = Math.round((stats.currentWeek / stats.weeklyGoal) * 100);
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return '#ef4444';
-      case 'medium': return '#f59e0b';
-      case 'low': return '#10b981';
-      default: return '#6b7280';
-    }
+  // (MỚI) Hàm chọn tiêu đề
+  const renderTitle = () => {
+    if (activeView === 'reported_users') return "User Bị báo cáo";
+    if (activeView === 'reported_posts') return "Bài viết Bị báo cáo";
+    return "Dashboard Quản trị";
   };
-
-  // Task handlers (Giữ nguyên)
-  const handleToggleTask = (taskId) => { setTasks(tasks.map(task => task.id === taskId ? { ...task, completed: !task.completed } : task)); };
-  const handleDeleteTask = (taskId) => { setTasks(tasks.filter(task => task.id !== taskId)); };
-  const handleCreateTask = () => { /* ... (Logic tạo task mẫu) ... */ };
-  const handleOpenTaskModal = () => { setShowTaskModal(true); };
-  const handleCloseTaskModal = () => { setShowTaskModal(false); /* ... */ };
+  
+  // (MỚI) Hàm chọn lời chào
+  const renderSubtitle = () => {
+    if (activeView === 'reported_users') return "Xem xét và xử lý các user bị báo cáo.";
+    if (activeView === 'reported_posts') return "Xem xét và xử lý các bài viết bị báo cáo.";
+    return "Chào mừng Admin, đây là trung tâm điều hành của bạn.";
+  }
 
   return (
-    <div className="dashboard">
-      {/* Header Section */}
-      <div className="dashboard-header">
-        <div className="welcome-section">
-          {/* --- (ĐÃ SỬA) DÙNG t() --- */}
-          <h1 className="welcome-title">{t('dashboard.welcome', { username: username })}</h1>
-          <p className="welcome-subtitle">{t('dashboard.quote')}</p>
-        </div>
-        <div className="date-info">
-          <BsCalendar3 className="calendar-icon" />
-          <span>{currentTime.toLocaleDateString(i18n.language, { // Dùng i18n.language
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })}</span>
-        </div>
-      </div>
+    <div className="admin-layout">
+      {/* Truyền 'activeView' và 'setActiveView' vào Sidebar */}
+      <AdminSidebar 
+        onLogout={onLogout} 
+        activeView={activeView} 
+        setActiveView={setActiveView} 
+      />
+      
+      <main className="admin-content">
+        <h1>{renderTitle()}</h1> 
+        <p>{renderSubtitle()}</p>
 
-      {/* Stats Cards */}
-      <div className="stats-grid">
-        {/* Tasks Completion */}
-        <div className="stat-card tasks-card">
-          <div className="stat-header">
-            <div className="stat-icon tasks-icon"><BsCheckCircleFill /></div>
-            <span className="stat-label">{t('dashboard.statToday')}</span>
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{t('dashboard.tasksCompleted', { completed: stats.tasksCompleted, total: stats.totalTasks })}</div>
-            <div className="progress-bar">
-              <div className="progress-fill tasks-progress" style={{ width: `${completionRate}%` }}></div>
-            </div>
-            <span className="stat-subtitle">{t('dashboard.percentComplete', { rate: completionRate })}</span>
-          </div>
-        </div>
+        {/* --- (ĐÃ SỬA) Hiển thị nội dung theo 'activeView' --- */}
 
-        {/* Study Streak */}
-        <div className="stat-card streak-card">
-          <div className="stat-header">
-            <div className="stat-icon streak-icon"><BsFire /></div>
-            <span className="stat-label">{t('dashboard.statStreak')}</span>
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{t('dashboard.streakDays', { count: stats.studyStreak })}</div>
-            <div className="streak-indicator">
-              {[...Array(7)].map((_, i) => (<div key={i} className={`streak-day ${i < stats.studyStreak ? 'active' : ''}`} />))}
-            </div>
-            <span className="stat-subtitle">{t('dashboard.streakSubtitle')}</span>
-          </div>
-        </div>
-
-        {/* Pomodoro Sessions */}
-        <div className="stat-card pomodoro-card">
-          <div className="stat-header">
-            <div className="stat-icon pomodoro-icon"><BsClock /></div>
-            <span className="stat-label">{t('dashboard.statPomodoro')}</span>
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{t('dashboard.pomoSessions', { count: stats.pomodoroSessions })}</div>
-            <div className="pomodoro-time">
-              <IoFlash className="flash-icon" />
-              <span>{t('dashboard.pomoMinutes', { minutes: stats.pomodoroSessions * 25 })}</span>
-            </div>
-            <span className="stat-subtitle">{t('dashboard.pomoTomatoes', { count: stats.pomodoroSessions * 2 })}</span>
-          </div>
-        </div>
-
-        {/* Weekly Goal */}
-        <div className="stat-card goal-card">
-          <div className="stat-header">
-            <div className="stat-icon goal-icon"><BsTrophy /></div>
-            <span className="stat-label">{t('dashboard.statGoal')}</span>
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{t('dashboard.goalHours', { current: stats.currentWeek, goal: stats.weeklyGoal })}</div>
-            <div className="progress-bar">
-              <div className="progress-fill goal-progress" style={{ width: `${weeklyProgress}%` }}></div>
-            </div>
-            <span className="stat-subtitle">{t('dashboard.goalPercent', { rate: weeklyProgress })}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="content-grid">
-        {/* Upcoming Tasks */}
-        <div className="content-card tasks-list-card">
-          <div className="card-header">
-            <h3 className="card-title"><IoTrendingUp className="title-icon" /> {t('dashboard.upcomingTasks')}</h3>
-            <button className="view-all-btn">{t('dashboard.viewAll')}</button>
-          </div>
-          <div className="tasks-list">
-            {upcomingTasks.length > 0 ? (
-              upcomingTasks.map(task => (
-                <div key={task.id} className="task-item">
-                  <div className="task-checkbox" onClick={() => handleToggleTask(task.id)}>
-                    {task.completed ? <BsCheckCircleFill className="checkbox-checked" /> : <BsCircle className="checkbox-unchecked" />}
-                  </div>
-                  <div className="task-info">
-                    <p className="task-title">{task.title}</p>
-                    <div className="task-meta">
-                      <span className="task-priority" style={{ backgroundColor: getPriorityColor(task.priority) }}>
-                        {t(`dashboard.modalPriority${task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}`, task.priority)}
-                      </span>
-                      <span className="task-deadline"><BsClock /> {task.deadline}</span>
-                    </div>
-                  </div>
-                  <button className="delete-task-btn" onClick={() => handleDeleteTask(task.id)}><BsTrash /></button>
-                </div>
-              ))
-            ) : (
-              <div className="empty-tasks"><p>{t('dashboard.noTasks')}</p></div>
-            )}
-          </div>
-          <button className="add-task-btn" onClick={handleOpenTaskModal}>
-            <BsPlus className="plus-icon" /> {t('dashboard.addTask')}
-          </button>
-        </div>
-
-        {/* Recent Activities */}
-        <div className="content-card activities-card">
-          <div className="card-header">
-            <h3 className="card-title"><IoFlash className="title-icon" /> {t('dashboard.recentActivity')}</h3>
-          </div>
-          <div className="activities-list">
-            {recentActivities.map(activity => (
-              <div key={activity.id} className="activity-item">
-                <div className="activity-icon">{activity.icon}</div>
-                <div className="activity-info">
-                  <p className="activity-text">{activity.text}</p>
-                  <span className="activity-time">{activity.time}</span>
+        {/* --- 1. View DASHBOARD (Stats, All Users, All Posts) --- */}
+        {activeView === 'dashboard' && (
+          <>
+            {/* --- Stats Cards --- */}
+            <div className="stat-card-grid">
+              <div className="admin-stat-card">
+                <div className="stat-icon users"><BsPeopleFill /></div>
+                <div className="stat-info">
+                  <span className="stat-value">{loading ? '...' : stats.totalUsers}</span>
+                  <span className="stat-label">Tổng số User</span>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="quick-actions">
-        <h3 className="section-title">{t('dashboard.quickActions')}</h3>
-        <div className="actions-grid">
-          <button className="action-btn pomodoro-action"><BsClock className="action-icon" /> <span>{t('dashboard.actionPomo')}</span></button>
-          <button className="action-btn task-action" onClick={handleOpenTaskModal}><BsCheckCircleFill className="action-icon" /> <span>{t('dashboard.actionTask')}</span></button>
-          <button className="action-btn study-action"><BsFire className="action-icon" /> <span>{t('dashboard.actionRoom')}</span></button>
-          <button className="action-btn ai-action"><IoFlash className="action-icon" /> <span>{t('dashboard.actionAI')}</span></button>
-        </div>
-      </div>
-
-      <div className="content-card history-card">
-  <div className="card-header">
-    <h3 className="card-title">⏰ Lịch sử Pomodoro</h3>
-  </div>
-  <div className="history-list">
-    {historyLoading && <p>Đang tải lịch sử...</p>}
-    {historyError && <p style={{color: 'red'}}>Lỗi: {historyError}</p>}
-    {!historyLoading && !historyError && pomoHistory.length === 0 && <p>Chưa có phiên Pomodoro nào.</p>}
-    {!historyLoading && !historyError && pomoHistory.length > 0 && (
-      <ul>
-        {pomoHistory.map(session => (
-          <li key={session.id}>
-            {new Date(session.endTime).toLocaleDateString('vi-VN')} - {session.duration} phút Focus
-          </li>
-        ))}
-      </ul>
-    )}
-  </div>
-</div>
-
-      {/* Create Task Modal */}
-      {showTaskModal && (
-        <div className="modal-overlay" onClick={handleCloseTaskModal}>
-          <div className="modal-content task-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">{t('dashboard.modalCreateTitle')}</h3>
-              <button className="close-modal-btn" onClick={handleCloseTaskModal}><IoClose /></button>
-            </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label htmlFor="task-title">{t('dashboard.modalTaskName')}</label>
-                <input id="task-title" type="text" className="form-input" placeholder={t('dashboard.modalTaskNamePlaceholder')} value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })} autoFocus />
+              <div className="admin-stat-card">
+                <div className="stat-icon posts"><BsFileEarmarkTextFill /></div>
+                <div className="stat-info">
+                  <span className="stat-value">{loading ? '...' : stats.totalPosts}</span>
+                  <span className="stat-label">Tổng số Bài viết</span>
+                </div>
               </div>
-              <div className="form-group">
-                <label htmlFor="task-deadline">{t('dashboard.modalDeadline')}</label>
-                <input id="task-deadline" type="text" className="form-input" placeholder={t('dashboard.modalDeadlinePlaceholder')} value={newTask.deadline} onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })} />
-              </div>
-              <div className="form-group">
-                <label htmlFor="task-priority">{t('dashboard.modalPriority')}</label>
-                <div className="priority-options">
-                  <button className={`priority-btn ${newTask.priority === 'high' ? 'active' : ''}`} style={{ borderColor: '#ef4444', color: newTask.priority === 'high' ? '#fff' : '#ef4444', backgroundColor: newTask.priority === 'high' ? '#ef4444' : 'transparent' }} onClick={() => setNewTask({ ...newTask, priority: 'high' })}>
-                    {t('dashboard.modalPriorityHigh')}
-                  </button>
-                  <button className={`priority-btn ${newTask.priority === 'medium' ? 'active' : ''}`} style={{ borderColor: '#f59e0b', color: newTask.priority === 'medium' ? '#fff' : '#f59e0b', backgroundColor: newTask.priority === 'medium' ? '#f59e0b' : 'transparent' }} onClick={() => setNewTask({ ...newTask, priority: 'medium' })}>
-                    {t('dashboard.modalPriorityMedium')}
-                  </button>
-                  <button className={`priority-btn ${newTask.priority === 'low' ? 'active' : ''}`} style={{ borderColor: '#10b981', color: newTask.priority === 'low' ? '#fff' : '#10b981', backgroundColor: newTask.priority === 'low' ? '#10b981' : 'transparent' }} onClick={() => setNewTask({ ...newTask, priority: 'low' })}>
-                    {t('dashboard.modalPriorityLow')}
-                  </button>
+              <div className="admin-stat-card">
+                <div className="stat-icon new-users"><BsExclamationOctagonFill /></div>
+                <div className="stat-info">
+                  <span className="stat-value">{loading ? '...' : reports.length}</span>
+                  <span className="stat-label">Báo cáo đang chờ</span>
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
-              <button className="btn-cancel" onClick={handleCloseTaskModal}>{t('dashboard.modalCancel')}</button>
-              <button className="btn-create" onClick={handleCreateTask} disabled={!newTask.title.trim() || !newTask.deadline.trim()}>
-                {t('dashboard.modalCreate')}
-              </button>
+
+            {/* --- User Management --- */}
+            <div className="admin-section">
+              <div className="admin-section-header">
+                <h2>Quản lý User</h2>
+                <button className="admin-btn primary" onClick={() => openModal('addUser')}>
+                  <BsPlusCircleFill /> Thêm User
+                </button>
+              </div>
+              <div className="admin-table-container">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>User ID</th>
+                      <th>Username</th>
+                      <th>Email</th>
+                      <th>Vai trò</th>
+                      <th>Ngày tham gia</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading && <tr><td colSpan="6">Đang tải...</td></tr>}
+                    {error && <tr><td colSpan="6" style={{color: 'red'}}>{error}</td></tr>}
+                    {users.map(user => (
+                      <tr key={user.user_id}>
+                        <td>{user.user_id}</td>
+                        <td>{user.username}</td>
+                        <td>{user.email}</td>
+                        <td><span className={`role-badge ${user.role}`}>{user.role}</span></td>
+                        <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                        <td className="actions">
+                          <button className="admin-btn edit" onClick={() => openModal('editUser', user)}>
+                            <BsPencil />
+                          </button>
+                          <button className="admin-btn delete" onClick={() => handleDeleteUser(user.user_id)}>
+                            <BsTrash />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* --- Post Management --- */}
+            <div className="admin-section">
+              <div className="admin-section-header">
+                <h2>Quản lý Bài viết Forum</h2>
+              </div>
+              <div className="admin-table-container">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Post ID</th>
+                      <th>Nội dung</th>
+                      <th>Người đăng</th>
+                      <th>Ngày đăng</th>
+                      <th>Reactions</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading && <tr><td colSpan="6">Đang tải...</td></tr>}
+                    {posts.map(post => (
+                      <tr key={post.post_id}>
+                        <td>{post.post_id}</td>
+                        <td className="post-content-cell">{post.content.substring(0, 100)}...</td>
+                        <td>{post.author.username} (ID: {post.author.user_id})</td>
+                        <td>{new Date(post.created_at).toLocaleDateString()}</td>
+                        <td>{Object.values(post.reaction_counts).reduce((a, b) => a + b, 0)}</td>
+                        <td className="actions">
+                          <button className="admin-btn delete" onClick={() => handleDeletePost(post.post_id)}>
+                            <BsTrash />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+        
+        {/* --- 2. View USER BỊ BÁO CÁO --- */}
+        {activeView === 'reported_users' && (
+          <div className="admin-section">
+            <div className="admin-section-header">
+              <h2>User Bị báo cáo (Chưa xử lý)</h2>
+            </div>
+            <div style={{padding: '20px'}}>
+              <p>Chức năng này sẽ được phát triển trong tương lai.</p>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* --- 3. View BÀI VIẾT BỊ BÁO CÁO --- */}
+        {activeView === 'reported_posts' && (
+           <div className="admin-section">
+            <div className="admin-section-header">
+              <h2>Bài viết Bị báo cáo (Đang chờ)</h2>
+            </div>
+            <div className="admin-table-container">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Report ID</th>
+                    <th>Lý do Báo cáo</th>
+                    <th>Nội dung Bài viết</th>
+                    <th>Người Báo cáo</th>
+                    <th>Tác giả Bài viết</th>
+                    <th>Ngày Báo cáo</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading && <tr><td colSpan="7">Đang tải...</td></tr>}
+                  {error && <tr><td colSpan="7" style={{color: 'red'}}>{error}</td></tr>}
+                  {!loading && reports.length === 0 && <tr><td colSpan="7">Không có báo cáo nào đang chờ.</td></tr>}
+                  
+                  {reports.map(report => (
+                    <tr key={report.report_id}>
+                      <td>{report.report_id}</td>
+                      <td className="report-reason-cell">{report.reason}</td>
+                      <td className="post-content-cell">{report.post.content.substring(0, 100)}...</td>
+                      <td>{report.reporter.username} (ID: {report.reporter.user_id})</td>
+                      <td>{report.post.author.username} (ID: {report.post.author.user_id})</td>
+                      <td>{new Date(report.report_date).toLocaleDateString()}</td>
+                      <td className="actions">
+                        <button 
+                          className="admin-btn ignore" 
+                          title="Bỏ qua báo cáo"
+                          onClick={() => handleResolveReport(report.report_id, 'ignore')}
+                        >
+                          <BsShieldCheck /> Bỏ qua
+                        </button>
+                        <button 
+                          className="admin-btn delete" 
+                          title="Xóa bài viết này"
+                          onClick={() => handleResolveReport(report.report_id, 'delete')}
+                        >
+                          <BsTrash /> Xóa
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        {/* --- KẾT THÚC HIỂN THỊ THEO VIEW --- */}
+
+      </main>
+
+      {/* (Modal giữ nguyên) */}
+      {modalState.isOpen && modalState.type === 'addUser' && (
+        <AdminModal title="Tạo User Mới" onClose={closeModal}>
+          <form onSubmit={handleAddUser} className="admin-form">
+            <div className="form-group"><label>Username</label><input type="text" name="username" onChange={handleFormChange} required /></div>
+            <div className="form-group"><label>Email</label><input type="email" name="email" onChange={handleFormChange} required /></div>
+            <div className="form-group"><label>Password</label><input type="password" name="password" onChange={handleFormChange} required /></div>
+            <div className="form-group">
+              <label>Vai trò</label>
+              <select name="role" defaultValue="user" onChange={handleFormChange}>
+                <option value="user">User</option><option value="admin">Admin</option>
+              </select>
+            </div>
+            <div className="form-actions">
+              <button type="button" className="admin-btn" onClick={closeModal}>Hủy</button>
+              <button type="submit" className="admin-btn primary">Tạo</button>
+            </div>
+          </form>
+        </AdminModal>
       )}
+      {modalState.isOpen && modalState.type === 'editUser' && (
+        <AdminModal title={`Sửa User: ${modalState.data.username}`} onClose={closeModal}>
+          <form onSubmit={handleEditUser} className="admin-form">
+            <div className="form-group"><label>Username</label><input type="text" name="username" defaultValue={formData.username} onChange={handleFormChange} required /></div>
+            <div className="form-group"><label>Email</label><input type="email" name="email" defaultValue={formData.email} onChange={handleFormChange} required /></div>
+            <div className="form-group">
+              <label>Vai trò</label>
+              <select name="role" defaultValue={formData.role} onChange={handleFormChange}>
+                <option value="user">User</option><option value="admin">Admin</option>
+              </select>
+            </div>
+            <div className="form-actions">
+              <button type="button" className="admin-btn" onClick={closeModal}>Hủy</button>
+              <button type="submit" className="admin-btn primary">Lưu thay đổi</button>
+            </div>
+          </form>
+        </AdminModal>
+      )}
+
     </div>
   );
 };
 
-export default Dashboard;
+export default DashboardAdmin;

@@ -1,8 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { BsPlayFill, BsPauseFill, BsStopFill, BsSkipEndFill, BsGearFill } from 'react-icons/bs';
-import './Pomodoro.css'; // We will update this CSS file too
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, Title } from 'chart.js';
+import { 
+  BsPlayFill, BsPauseFill, BsStopFill, BsSkipEndFill, BsGearFill, 
+  BsCardChecklist, BsTrash, BsMusicNoteBeamed, BsFillVolumeUpFill, BsFillVolumeMuteFill 
+} from 'react-icons/bs';
+import { IoClose } from 'react-icons/io5';
+import './Pomodoro.css'; 
+import { workspaceService } from '../services/workspaceService'; 
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+import { usePopper } from 'react-popper';
+import avt from "../assets/Trangchu/avt.png"; 
 
-// Default settings
+ChartJS.register(ArcElement, Tooltip, Legend, Title);
+
+// (Các hằng số và hàm helper giữ nguyên)
 const DEFAULT_SETTINGS = {
     focus: 25,
     shortBreak: 5,
@@ -11,27 +24,124 @@ const DEFAULT_SETTINGS = {
     autoStartBreaks: false,
     autoStartFocus: false,
 };
-
-// Simple audio alert function (replace URL if needed)
 const playAlarm = () => {
     try {
-        // Use a reliable short sound
         const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg"); 
-        audio.play().catch(e => console.warn("Audio playback failed:", e)); // Handle autoplay restrictions
+        audio.play().catch(e => console.warn("Audio playback failed:", e)); 
     } catch (e) {
         console.error("Failed to play alarm:", e);
     }
 };
-
-// Helper to get user ID
 const getUserId = () => {
     try { const u = localStorage.getItem("user"); return u ? JSON.parse(u)?.user_id : null; }
     catch (e) { console.error("Error getting user ID:", e); return null; }
 };
+const soundOptions = [
+    { id: 'none', name: 'Tắt', url: null },
+    { id: 'lofi', name: 'Lofi Hip Hop', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' }, 
+    { id: 'rain', name: 'Tiếng mưa', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }, 
+    { id: 'cafe', name: 'Quán Cafe', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' }, 
+];
+
+// (Component PomodoroStats giữ nguyên)
+const PomodoroStats = () => {
+  const [chartData, setChartData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const chartColors = [
+      '#667eea', '#f59e0b', '#10b981', '#ec4899', 
+      '#3b82f6', '#8b5cf6', '#ef4444', '#14b8a6'
+  ];
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const stats = await workspaceService.getPomodoroStats(); 
+        
+        if (stats.length === 0) {
+          setChartData(null); 
+          return;
+        }
+
+        const labels = stats.map(s => s.task_name);
+        const dataPoints = stats.map(s => s.total_minutes);
+
+        setChartData({
+          labels: labels,
+          datasets: [
+            {
+              label: 'Số phút tập trung',
+              data: dataPoints,
+              backgroundColor: chartColors.slice(0, dataPoints.length),
+              borderColor: 'var(--bg-secondary-color)',
+              borderWidth: 2,
+            },
+          ],
+        });
+        
+      } catch (err) {
+        console.error("Lỗi tải Pomodoro stats:", err);
+        setError("Không thể tải thống kê.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return <div className="spinner-small" style={{margin: '20px auto'}}></div>;
+  }
+  if (error) {
+    return <p className="error-msg">{error}</p>;
+  }
+  if (!chartData) {
+    return <p>Không có dữ liệu thống kê để hiển thị.</p>;
+  }
+
+  return (
+    <div className="stats-chart-container">
+      <Pie 
+        data={chartData} 
+        options={{
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: { color: 'var(--text-color)' }
+            },
+            title: {
+              display: true,
+              text: 'Phân bổ thời gian tập trung',
+              color: 'var(--text-color)',
+              font: { size: 16 }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed !== null) {
+                    label += `${context.parsed} phút`;
+                  }
+                  return label;
+                }
+              }
+            }
+          }
+        }} 
+      />
+    </div>
+  );
+};
 
 
 const Pomodoro = () => {
-    // ----- Settings State -----
+    // (Các state cũ giữ nguyên)
     const [settings, setSettings] = useState(() => {
         try {
             const saved = localStorage.getItem('pomodoroSettings');
@@ -40,25 +150,37 @@ const Pomodoro = () => {
             return DEFAULT_SETTINGS;
         }
     });
-    const [showSettings, setShowSettings] = useState(false); // Toggle for settings modal/panel
-
-    // ----- Timer State -----
-    const [mode, setMode] = useState('focus'); // 'focus', 'shortBreak', 'longBreak'
+    const [showSettings, setShowSettings] = useState(false);
+    const [mode, setMode] = useState('focus'); 
     const [timeLeft, setTimeLeft] = useState(settings.focus * 60);
     const [isRunning, setIsRunning] = useState(false);
-    const [cycle, setCycle] = useState(1); // Current cycle number (1-based)
-    const intervalRef = useRef(null); // To store interval ID
-    const sessionStartTimeRef = useRef(null); // To store start time of the current session
-
-     // ----- History State -----
+    const [cycle, setCycle] = useState(1); 
+    const intervalRef = useRef(null); 
+    const sessionStartTimeRef = useRef(null); 
      const [history, setHistory] = useState([]);
      const [historyLoading, setHistoryLoading] = useState(false);
      const [historyError, setHistoryError] = useState(null);
-     const [showHistory, setShowHistory] = useState(false); // Toggle for history panel
+     const [showHistory, setShowHistory] = useState(false); 
+    const [selectedTask, setSelectedTask] = useState(null); 
+    const [showTaskModal, setShowTaskModal] = useState(false); 
+    const [modalLoading, setModalLoading] = useState(false); 
+    
+    // --- (SỬA LỖI 1) Thêm 'no_due_date' vào state ---
+    const [modalTaskGroups, setModalTaskGroups] = useState({ 
+        overdue: [],
+        today: [],
+        upcoming: [],
+        no_due_date: [] // <-- (CODE MỚI)
+    });
+    // --- (KẾT THÚC SỬA LỖI 1) ---
+    
+    const [showAudioPanel, setShowAudioPanel] = useState(false);
+    const [currentSound, setCurrentSound] = useState(soundOptions[0]);
+    const [volume, setVolume] = useState(0.5); 
+    const audioRef = useRef(null); 
 
 
-    // ----- Effects -----
-    // Timer countdown effect
+    // ----- Effects (giữ nguyên) -----
     useEffect(() => {
       document.title = `${formatTime(timeLeft)} - ${modeDisplay()} | Pomodoro`;
         if (isRunning && timeLeft > 0) {
@@ -66,29 +188,46 @@ const Pomodoro = () => {
                 setTimeLeft(prev => prev - 1);
             }, 1000);
         } else if (timeLeft === 0 && isRunning) {
-            // isRunning check prevents double trigger if manually skipped
             clearInterval(intervalRef.current);
-            setIsRunning(false); // Stop the timer first
+            setIsRunning(false); 
             playAlarm();
-            handleSessionEnd(); // Then handle switching modes/saving
+            handleSessionEnd(); 
         }
-        // Cleanup interval on unmount or when isRunning/timeLeft changes
         return () => clearInterval(intervalRef.current);
-    }, [isRunning, timeLeft]); // Rerun effect when isRunning or timeLeft changes
+    }, [isRunning, timeLeft]);
 
-   
-
-
-     // Fetch history on component mount
      useEffect(() => {
          fetchHistory();
-     }, []); // Run once
+     }, []); 
+
+    useEffect(() => {
+      const audioEl = audioRef.current;
+      if (!audioEl) return;
+      if (currentSound.url && isRunning && mode === 'focus') {
+        audioEl.src = currentSound.url;
+        audioEl.volume = volume;
+        audioEl.loop = true;
+        audioEl.play().catch(e => console.warn("Audio autoplay bị chặn:", e));
+      } else {
+        audioEl.pause();
+      }
+    }, [currentSound, isRunning, mode, volume]); 
+
+    const handleVolumeChange = (e) => {
+      const newVolume = parseFloat(e.target.value);
+      setVolume(newVolume);
+      if (audioRef.current) {
+        audioRef.current.volume = newVolume;
+      }
+    };
 
 
-    // ----- Timer Logic Functions -----
+    // (Tất cả các hàm logic khác: startTimer, pauseTimer, stopAndResetTimer, handleSessionEnd, 
+    // handleSkip, saveSession, fetchHistory, handleSettingsChange, saveSettings, 
+    // ... ĐỀU GIỮ NGUYÊN ...
     const startTimer = () => {
-        if (timeLeft <= 0) return; // Don't start if time is up
-        sessionStartTimeRef.current = new Date(); // Record start time
+        if (timeLeft <= 0) return; 
+        sessionStartTimeRef.current = new Date(); 
         setIsRunning(true);
     };
 
@@ -99,161 +238,116 @@ const Pomodoro = () => {
 
     const stopAndResetTimer = () => {
         clearInterval(intervalRef.current);
-        
         const wasRunningFocus = isRunning && mode === 'focus';
         const startTime = sessionStartTimeRef.current;
-        
         if (wasRunningFocus && startTime) {
             const endTime = new Date();
             const durationToSave = settings.focus; 
-            
-            // 1. Call saveSession to save to the database
             saveSession(startTime, endTime, durationToSave, 'focus'); 
-            
-            // 2. IMMEDIATELY call fetchHistory afterwards! 👇
-            fetchHistory(); // Fetch immediately after saving attempt
-            
-            console.log(`History save triggered by Stop/Reset. Intended Duration: ${durationToSave}`);
+            fetchHistory(); 
         }
-
-        // 3. Then reset the state
         setIsRunning(false);
         setMode('focus');
         setCycle(1);
         setTimeLeft(settings.focus * 60);
         sessionStartTimeRef.current = null; 
+        setSelectedTask(null); 
     };
 
     const handleSessionEnd = () => {
-        const finishedMode = mode; // Capture the mode that just finished
-        const startTime = sessionStartTimeRef.current; // Get the start time
-        sessionStartTimeRef.current = null; // Reset start time ref
-
-        // --- Save History for completed FOCUS session ---
+        const finishedMode = mode; 
+        const startTime = sessionStartTimeRef.current; 
+        sessionStartTimeRef.current = null; 
         if (finishedMode === 'focus' && startTime) {
             const endTime = new Date();
             const durationMinutes = settings.focus;
             saveSession(startTime, endTime, durationMinutes, 'focus');
-            // Fetch history again after saving
             fetchHistory(); 
         }
-
-        // --- Switch Mode ---
         let nextMode = 'focus';
         let nextTime = settings.focus * 60;
         let nextCycle = cycle;
-
         if (finishedMode === 'focus') {
             if (cycle >= settings.cyclesBeforeLongBreak) {
                 nextMode = 'longBreak';
                 nextTime = settings.longBreak * 60;
-                nextCycle = 1; // Reset cycle after long break
+                nextCycle = 1; 
             } else {
                 nextMode = 'shortBreak';
                 nextTime = settings.shortBreak * 60;
-                // Cycle increments only after focus->break transition, BEFORE long break reset
-                 nextCycle = cycle + 1; // Increment cycle here
+                 nextCycle = cycle + 1; 
             }
-        } else { // Finished a break (short or long)
+        } else { 
             nextMode = 'focus';
             nextTime = settings.focus * 60;
-            // Cycle was already updated/reset when break started
              nextCycle = cycle;
         }
-
         setMode(nextMode);
         setTimeLeft(nextTime);
         setCycle(nextCycle);
-
-        // Auto-start next session based on settings
         if (nextMode === 'focus' && settings.autoStartFocus) {
             startTimer();
         } else if ((nextMode === 'shortBreak' || nextMode === 'longBreak') && settings.autoStartBreaks) {
             startTimer();
         } else {
-             setIsRunning(false); // Explicitly ensure timer stops if no auto-start
+             setIsRunning(false); 
         }
     };
     
-    // Skip current session (counts as completed focus for history if skipped during focus)
     const handleSkip = () => {
         if (!window.confirm(`Bạn có muốn bỏ qua phiên ${modeDisplay()} hiện tại?`)) return;
-        
         clearInterval(intervalRef.current);
-        setIsRunning(false); // Stop timer
-        playAlarm(); // Play sound on skip too
-        
-        // Treat skipped focus as completed for history saving purposes
+        setIsRunning(false); 
+        playAlarm(); 
         const finishedMode = mode;
         const startTime = sessionStartTimeRef.current;
         if (finishedMode === 'focus' && startTime) {
              const endTime = new Date();
              let durationMinutes = 0;
-         switch(finishedMode) {
-             case 'focus': durationMinutes = settings.focus; break;
-             // Không lưu history cho break khi skip
-             // case 'shortBreak': durationMinutes = settings.shortBreak; break; 
-             // case 'longBreak': durationMinutes = settings.longBreak; break;
-             default: durationMinutes = settings.focus; // Mặc định
-         }
-         // Chỉ lưu nếu là focus
-         if (durationMinutes > 0 && finishedMode === 'focus') {
-             saveSession(startTime, endTime, durationMinutes, 'focus');
-             fetchHistory();
-         }
+             switch(finishedMode) {
+                 case 'focus': durationMinutes = settings.focus; break;
+                 default: durationMinutes = settings.focus;
+             }
+             if (durationMinutes > 0 && finishedMode === 'focus') {
+                 saveSession(startTime, endTime, durationMinutes, 'focus'); 
+                 fetchHistory(); 
+             }
         }
-        
-        // Immediately trigger the logic for session end
         handleSessionEnd(); 
     };
 
-    // ----- History Functions -----
      const saveSession = async (startTime, endTime, durationMinutes, type) => {
          const userId = getUserId();
          if (!userId) {
              console.error("Cannot save session: User ID not found.");
-             // Maybe show error to user
              return;
          }
-         console.log(`Saving ${type} session for user ${userId}: ${durationMinutes} mins`);
+         const taskIdString = selectedTask ? selectedTask.id : null;
+         console.log(`Saving ${type} session for user ${userId}: ${durationMinutes} mins, Task: ${taskIdString}`);
          try {
-             const response = await fetch('http://localhost:5000/api/pomodoro/session', {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify({
-                     userId: userId,
-                     startTime: startTime.toISOString(), // Send as ISO string
-                     endTime: endTime.toISOString(),     // Send as ISO string
-                     duration: durationMinutes,
-                     type: type
-                 }),
+             const data = await workspaceService.savePomodoroSession({
+                 userId: userId,
+                 startTime: startTime.toISOString(), 
+                 endTime: endTime.toISOString(),     
+                 duration: durationMinutes,
+                 type: type,
+                 taskId: taskIdString 
              });
-             if (!response.ok) {
-                 const errorData = await response.json();
-                 throw new Error(errorData.message || `HTTP error ${response.status}`);
+             console.log("Session saved successfully");
+             if (type === 'focus' && data.new_total_tomatoes) {
+                 alert("Hoàn thành phiên tập trung!\nBạn nhận được +1 🍅");
              }
-             const result = await response.json();
-             console.log("Session saved successfully:", result);
-             // Maybe show success message briefly?
          } catch (error) {
              console.error("Error saving Pomodoro session:", error);
-             // Show error message to user
              setHistoryError(`Lỗi lưu session: ${error.message}`);
          }
      };
 
      const fetchHistory = async () => {
-         const userId = getUserId();
-         if (!userId) {
-              setHistoryError("Chưa đăng nhập.");
-              return;
-         }
          setHistoryLoading(true);
          setHistoryError(null);
          try {
-             const response = await fetch(`http://localhost:5000/api/pomodoro/history?userId=${userId}`);
-             if (!response.ok) throw new Error(`Lỗi HTTP: ${response.status}`);
-             const data = await response.json();
+             const data = await workspaceService.getPomodoroHistory();
              setHistory(data);
          } catch (err) {
              console.error("Lỗi fetch Pomo history:", err);
@@ -263,26 +357,53 @@ const Pomodoro = () => {
          }
      };
 
-    // ----- Settings Functions -----
     const handleSettingsChange = (e) => {
         const { name, value, type, checked } = e.target;
         setSettings(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : parseInt(value, 10) || 0 // Ensure number for durations
+            [name]: type === 'checkbox' ? checked : parseInt(value, 10) || 0
         }));
     };
 
     const saveSettings = () => {
         localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
         setShowSettings(false);
-        // Apply new focus time immediately if timer is reset
         if (!isRunning && mode === 'focus') {
              setTimeLeft(settings.focus * 60);
         }
-        // Handle other modes if needed
+    };
+    
+    // --- (SỬA LỖI 2) Cập nhật handleOpenTaskModal ---
+    const handleOpenTaskModal = async () => {
+      setModalLoading(true);
+      setShowTaskModal(true);
+      try {
+        const data = await workspaceService.getMyTasks(); 
+        // Đảm bảo tất cả các nhóm đều được khởi tạo
+        setModalTaskGroups({
+            overdue: data.overdue || [],
+            today: data.today || [],
+            upcoming: data.upcoming || [],
+            no_due_date: data.no_due_date || [] // <-- (CODE MỚI)
+        });
+      } catch (err) {
+        console.error("Lỗi tải 'My Tasks' cho Modal:", err);
+      } finally {
+        setModalLoading(false);
+      }
+    };
+    // --- (KẾT THÚC SỬA LỖI 2) ---
+    
+    const handleSelectTask = (task) => {
+      setSelectedTask(task);
+      setShowTaskModal(false);
+    };
+    
+    const clearSelectedTask = (e) => {
+      e.stopPropagation(); 
+      setSelectedTask(null);
     };
 
-    // ----- Display Helpers -----
     const formatTime = (secondsValue) => {
         const mins = String(Math.floor(secondsValue / 60)).padStart(2, '0');
         const secs = String(secondsValue % 60).padStart(2, '0');
@@ -302,21 +423,47 @@ const Pomodoro = () => {
     // ----- RENDER -----
     return (
         <div className="pomodoro-container">
-            {/* --- Settings Button --- */}
+            <audio ref={audioRef} />
+
+            {/* --- Buttons (giữ nguyên) --- */}
             <button className="settings-toggle-btn" onClick={() => setShowSettings(true)}>
                 <BsGearFill /> Cài đặt
             </button>
+            <button 
+              className="audio-toggle-btn" 
+              onClick={() => setShowAudioPanel(!showAudioPanel)}
+            >
+              <BsMusicNoteBeamed /> Âm thanh
+            </button>
 
-            {/* --- Main Timer Display --- */}
-             <div className="pomodoro-tomato-bg"> {/* Container for background */}
+
+            {/* --- Main Timer Display (giữ nguyên) --- */}
+             <div className="pomodoro-tomato-bg"> 
                  <div className="pomodoro-digital-time">
                      <h2>{formatTime(timeLeft)}</h2>
                  </div>
              </div>
              <p className="pomodoro-mode-display">{modeDisplay()}</p>
+             
+            {/* --- Task Selector (giữ nguyên) --- */}
+            <div 
+              className="task-selector-box" 
+              onClick={handleOpenTaskModal} 
+              title={selectedTask ? `Đang tập trung cho: ${selectedTask.title}` : "Chọn công việc"}
+            >
+              <BsCardChecklist className="task-selector-icon" />
+              <span className="task-selector-text">
+                {selectedTask ? selectedTask.title : "Chọn công việc để tập trung..."}
+              </span>
+              {selectedTask && (
+                <button className="task-clear-btn" onClick={clearSelectedTask}>
+                  <IoClose />
+                </button>
+              )}
+            </div>
 
 
-            {/* --- Controls --- */}
+            {/* --- Controls (giữ nguyên) --- */}
             <div className="pomodoro-controls">
                 <button onClick={stopAndResetTimer} title="Dừng & Reset" disabled={!isRunning && timeLeft === settings[mode]*60}>
                     <BsStopFill />
@@ -329,65 +476,85 @@ const Pomodoro = () => {
                 </button>
             </div>
 
+            {/* --- Bảng Âm thanh (giữ nguyên) --- */}
+            {showAudioPanel && (
+              <div className="audio-panel panel">
+                <h3>Âm thanh môi trường</h3>
+                <p>Âm thanh sẽ tự động phát khi bạn bắt đầu phiên "Tập trung".</p>
+                <div className="sound-options">
+                  {soundOptions.map(sound => (
+                    <button
+                      key={sound.id}
+                      className={`sound-option ${currentSound.id === sound.id ? 'active' : ''}`}
+                      onClick={() => setCurrentSound(sound)}
+                    >
+                      {sound.name}
+                    </button>
+                  ))}
+                </div>
+                <div className="volume-control">
+                  <BsFillVolumeMuteFill />
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={volume}
+                    onChange={handleVolumeChange}
+                    className="volume-slider"
+                  />
+                  <BsFillVolumeUpFill />
+                </div>
+              </div>
+            )}
 
-            {/* --- History Toggle Button --- */}
+
+            {/* --- Bảng Lịch sử & Thống kê (giữ nguyên) --- */}
             <button className="history-toggle-btn" onClick={() => { setShowHistory(!showHistory); if (!showHistory) fetchHistory(); }}>
-                 {showHistory ? 'Ẩn Lịch sử' : 'Xem Lịch sử'}
+                 {showHistory ? 'Ẩn Lịch sử & Thống kê' : 'Xem Lịch sử & Thống kê'}
              </button>
-
-             {/* --- History Panel --- */}
              {showHistory && (
                  <div className="pomodoro-history panel">
-                     <h3>Lịch sử phiên Focus</h3>
+                     
+                     <h3>Thống kê Tập trung</h3>
+                     <PomodoroStats />
+                     
+                     <h3 style={{marginTop: '20px'}}>Lịch sử phiên Focus</h3>
                      {historyLoading && <p>Đang tải...</p>}
                      {historyError && <p className="error-msg">Lỗi: {historyError}</p>}
                      {!historyLoading && !historyError && history.length === 0 && <p>Chưa có dữ liệu.</p>}
                      {!historyLoading && !historyError && history.length > 0 && (
                          <ul>
-        {history.map(s => {
-            // --- 👇 CALCULATE ACTUAL ELAPSED TIME ---
-            let actualDurationText = `${s.duration} phút`; // Default to intended duration
-            try {
-                const start = new Date(s.startTime);
-                const end = new Date(s.endTime);
-                // Calculate difference in seconds
-                const diffSeconds = Math.round((end - start) / 1000); 
-                
-                // Ensure difference is positive and reasonable (e.g., less than a few hours)
-                if (diffSeconds >= 0 && diffSeconds < (s.duration * 60 * 2)) { // Allow some buffer
-                    const actualMinutes = Math.floor(diffSeconds / 60);
-                    const actualSeconds = diffSeconds % 60;
-                    // Format the actual elapsed time
-                    actualDurationText = `${actualMinutes} phút ${actualSeconds} giây`; 
-                } else {
-                     console.warn(`Calculated duration (${diffSeconds}s) seems wrong for session ${s.id}, using intended duration.`);
-                }
-
-            } catch (e) {
-                console.error("Error calculating actual duration:", e);
-                // Fallback to intended duration if parsing fails
-            }
-            // --- END CALCULATION ---
-
-            return (
-                <li key={s.id}>
-                    {/* Format end time */}
-                    {new Date(s.endTime).toLocaleString('vi-VN', { 
-                        day: '2-digit', month: '2-digit', year: 'numeric', 
-                        hour: '2-digit', minute: '2-digit', second: '2-digit' 
-                    })} 
-                    {/* 👇 Display ACTUAL calculated time AND intended duration */}
-                    - {actualDurationText} / ({s.duration} phút dự định) 
-                </li>
-            );
-        })}
-    </ul>
+                            {history.map(s => {
+                                let actualDurationText = `${s.duration} phút`; 
+                                try {
+                                    const start = new Date(s.startTime);
+                                    const end = new Date(s.endTime);
+                                    const diffSeconds = Math.round((end - start) / 1000); 
+                                    if (diffSeconds >= 0 && diffSeconds < (s.duration * 60 * 2)) { 
+                                        const actualMinutes = Math.floor(diffSeconds / 60);
+                                        const actualSeconds = diffSeconds % 60;
+                                        actualDurationText = `${actualMinutes} phút ${actualSeconds} giây`; 
+                                    }
+                                } catch (e) { console.error("Error calculating actual duration:", e); }
+                                
+                                return (
+                                    <li key={s.id}>
+                                        {new Date(s.endTime).toLocaleString('vi-VN', { 
+                                            day: '2-digit', month: '2-digit', year: 'numeric', 
+                                            hour: '2-digit', minute: '2-digit' 
+                                        })} 
+                                        - {actualDurationText} / ({s.duration} phút dự định) 
+                                    </li>
+                                );
+                            })}
+                        </ul>
                      )}
                  </div>
              )}
 
 
-            {/* --- Settings Modal/Panel --- */}
+            {/* --- Settings Modal (giữ nguyên) --- */}
             {showSettings && (
                 <div className="settings-modal-overlay" onClick={() => setShowSettings(false)}>
                     <div className="settings-modal panel" onClick={(e) => e.stopPropagation()}>
@@ -423,6 +590,57 @@ const Pomodoro = () => {
                     </div>
                 </div>
             )}
+            
+            {/* --- (SỬA LỖI 3) Task Selection Modal --- */}
+            {showTaskModal && (
+              <div className="modal-overlay" onClick={() => setShowTaskModal(false)}>
+                <div className="task-modal-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="task-modal-header">
+                    <h3>Chọn công việc</h3>
+                    <button className="close-modal-btn" onClick={() => setShowTaskModal(false)}>
+                      <IoClose />
+                    </button>
+                  </div>
+                  <div className="task-modal-list">
+                    {modalLoading ? (
+                      <div className="loading-state"><div className="spinner-small"></div></div>
+                    ) : (
+                      <>
+                        {/* (SỬA LỖI 3) Đổi tên 'tasks' thành 'groupTasks' để tránh trùng lặp */}
+                        {Object.entries(modalTaskGroups).map(([groupName, groupTasks]) => (
+                          // (SỬA LỖI 3) Thêm key={groupName}
+                          groupTasks.length > 0 && (
+                            <div key={groupName} className="task-group">
+                              
+                              {/* (SỬA LỖI 3) Thêm tiêu đề cho nhóm 'no_due_date' */}
+                              <h4>
+                                {groupName === 'overdue' ? 'Quá hạn' : 
+                                 groupName === 'today' ? 'Hôm nay' : 
+                                 groupName === 'upcoming' ? 'Sắp tới' : 
+                                 'Không có ngày hạn'}
+                              </h4>
+                              
+                              {groupTasks.map(task => (
+                                <div 
+                                  key={task.id} 
+                                  className="task-modal-item"
+                                  onClick={() => handleSelectTask(task)}
+                                >
+                                  <span className="task-title">{task.title}</span>
+                                  <span className="task-origin">{task.workspace_name}</span>
+                                </div> 
+                              ))}
+                            </div>
+                          )
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* --- (KẾT THÚC SỬA LỖI 3) --- */}
+            
         </div>
     );
 };

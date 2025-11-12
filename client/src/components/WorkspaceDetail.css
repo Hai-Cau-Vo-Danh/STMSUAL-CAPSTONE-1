@@ -1311,3 +1311,254 @@ body.dark .card-delete-btn {
 body.dark .members-panel {
   background: rgba(30, 27, 75, 0.95);
 }
+/* (Thêm vào cuối file WorkspaceDetail.css) */
+
+/* --- SỬA LỖI 1: HIỂN THỊ AVATAR TRONG MODAL --- */
+.members-table .member-avatar-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover; /* Quan trọng: Đảm bảo ảnh vừa vặn, không bị méo */
+  background-color: var(--border-color); /* Màu nền cho ảnh mặc định */
+  
+  /* Ghi đè các thuộc tính cũ của div (nếu có) */
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px; /* Thêm khoảng cách với tên */
+  color: transparent; /* Ẩn text cũ "👤" nếu nó vẫn còn */
+}
+
+/* --- SỬA LỖI 2: CĂN CHỈNH FORM MỜI THÀNH VIÊN --- */
+.invite-form {
+  display: flex;
+  gap: 10px;
+  align-items: center; /* Căn giữa các item theo chiều dọc */
+  width: 100%;
+}
+
+.invite-form .email-input {
+  flex-grow: 1; /* Cho phép ô email chiếm nhiều không gian nhất */
+  min-width: 200px; /* Độ rộng tối thiểu */
+}
+
+.invite-form .role-select {
+  flex-shrink: 0; /* Không co lại */
+  min-width: 120px; /* Độ rộng vừa phải cho "Member" / "Admin" */
+}
+
+.invite-form .invite-btn {
+  flex-shrink: 0; /* Không co lại */
+}
+/* (Dán vào cuối file WorkspaceDetail.css) */
+
+.edit-card-form .date-picker-input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border 0.2s ease;
+    box-sizing: border-box; /* Thêm cái này để padding không làm vỡ layout */
+}
+
+.edit-card-form .date-picker-input:focus {
+    border-color: var(--primary-color);
+}
+
+/* Ghi đè icon của DatePicker */
+.edit-card-form .react-datepicker__input-container {
+    width: 100%;
+}
+.edit-card-form .react-datepicker-wrapper {
+    width: 100%;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px;
+  cursor: grab;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+.list-header:active {
+  cursor: grabbing;
+}
+.list-header:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.list-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0;
+  /* (MỚI) Cho phép co lại nếu cần */
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* Giảm gap */
+  flex-shrink: 0; /* Ngăn co lại */
+}
+
+.card-count {
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--primary-color);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Nút Sửa / Xóa List */
+.list-edit-btn,
+.list-delete-btn {
+  padding: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary-color);
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 14px;
+  display: flex;
+  transition: all 0.2s ease;
+}
+
+.list-edit-btn:hover {
+  background: rgba(102, 126, 234, 0.2);
+  color: var(--primary-color);
+}
+
+.list-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* Form Sửa List */
+.edit-list-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  margin-bottom: 12px;
+}
+
+.edit-list-form input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 2px solid var(--primary-color);
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  outline: none;
+  background: white;
+  min-width: 0; /* Sửa lỗi input tràn */
+}
+
+.edit-list-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.edit-list-actions button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.edit-list-actions button:first-child {
+  background: var(--success-color, #10b981);
+  color: white;
+}
+
+.edit-list-actions button:first-child:hover {
+  background: #059669;
+}
+
+.edit-list-actions button:last-child {
+  background: var(--danger-color, #ef4444);
+  color: white;
+}
+
+.edit-list-actions button:last-child:hover {
+  background: #dc2626;
+}
+.board-list-wrapper {
+  width: 280px;
+  min-width: 280px;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+/* "Bóng ma" (ghost) của cột khi kéo */
+.board-list.is-dragging-overlay {
+  min-width: 280px;
+  max-width: 280px;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  transform: rotate(2deg); /* Hiệu ứng hơi nghiêng khi kéo */
+}
+
+.board-list.is-dragging-overlay .list-header {
+  background: rgba(0, 0, 0, 0.05);
+  cursor: grabbing;
+}
+
+/* Đảm bảo phần header của cột là tay nắm kéo */
+.list-header {
+  cursor: grab;
+}
+
+.list-header:active {
+  cursor: grabbing;
+}
+.list-header {
+  /* Thêm cái này để căn chỉnh nút kéo và tiêu đề */
+  display: flex;
+  align-items: center;
+}
+
+.list-drag-handle {
+  background: none;
+  border: none;
+  padding: 4px 2px; /* Điều chỉnh kích thước vùng nhấn */
+  margin-right: 6px; /* Khoảng cách tới tiêu đề */
+  cursor: grab; /* Thay đổi con trỏ chuột */
+  color: #888;
+  border-radius: 4px;
+}
+.list-drag-handle:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+.list-drag-handle:active {
+  cursor: grabbing;
+}
+
+.list-header h3 {
+  /* Đảm bảo tiêu đề không bị đẩy lung tung */
+  flex-grow: 1; 
+  margin: 0;
+}

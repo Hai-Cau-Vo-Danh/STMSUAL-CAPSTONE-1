@@ -9,12 +9,17 @@ load_dotenv()
 # Lấy URL kết nối từ .env
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Khởi tạo engine và session
-# Thêm sslmode để Neon chấp nhận kết nối
-engine = create_engine(DATABASE_URL, echo=True, connect_args={
-    "sslmode": "require",
-    "connect_timeout": 10  # Thêm dòng này: Bắt buộc chờ tối đa 10 giây
-})
+# --- SỬA LẠI TẠI ĐÂY ---
+engine = create_engine(
+    DATABASE_URL,
+    echo=False, # Tắt 'echo=True' sau khi debug xong, nó gây spam log
+    pool_pre_ping=True,  # <-- BẮT BUỘC: Kiểm tra kết nối trước khi dùng
+    pool_recycle=3600,   # <-- Nên có: Làm mới kết nối sau 1 giờ
+    connect_args={
+        "sslmode": "require",
+        "connect_timeout": 10
+    }
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

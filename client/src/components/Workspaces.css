@@ -793,3 +793,50 @@ body.dark .workspace-stats {
 body.dark .modal-content {
   background: rgba(30, 27, 75, 0.95);
 }
+.workspace-actions {
+  position: relative;
+}
+
+.workspace-menu-popup {
+  position: absolute;
+  top: 100%; /* Ngay bên dưới nút 3 chấm */
+  right: 0;
+  background: var(--bg-secondary-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px var(--shadow-color);
+  padding: 8px;
+  z-index: 10;
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.workspace-menu-popup button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.workspace-menu-popup button:hover {
+  background: var(--bg-color);
+}
+
+.workspace-menu-popup button.delete {
+  color: #ef4444;
+}
+
+.workspace-menu-popup button.delete:hover {
+  background: rgba(239, 68, 68, 0.1);
+}

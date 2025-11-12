@@ -7,36 +7,39 @@ const Login = ({ onLoginSuccess }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); // Thêm state loading
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(""); // Xóa lỗi khi người dùng bắt đầu nhập lại
+    setError(""); 
+  };
+
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true); // Bật loading
+    setLoading(true); // <-- Bật loading ở đầu
     const { email, password } = formData;
 
     if (!email || !password) {
       setError("Vui lòng nhập đầy đủ thông tin!");
-      setLoading(false); // Tắt loading
+      setLoading(false); // Tắt loading nếu lỗi
       return;
     }
 
-    // Kiểm tra admin (hardcoded)
-    if (email === "admin" && password === "123456") {
-      localStorage.setItem("role", "admin");
-      localStorage.setItem("user", JSON.stringify({ username: "Admin" })); // Thêm user cho admin
-      onLoginSuccess();
-      setLoading(false); // Tắt loading
-      navigate("/dashboard-admin"); // Chuyển hướng admin
+    if (!validateEmail(email)) { // <-- Áp dụng cho cả admin
+      setError("Email không đúng định dạng (ví dụ: example@domain.com)");
+      setLoading(false); // Tắt loading nếu lỗi
       return;
     }
 
-    // Login user thường (Gọi API)
+    // --- (ĐÃ XÓA) Toàn bộ khối "if (email === 'admin' ...)" đã bị xóa ---
+
+    // Login (gọi API cho CẢ user và admin)
     try {
       const res = await fetch("http://localhost:5000/api/login", {
         method: "POST",
@@ -50,20 +53,21 @@ const Login = ({ onLoginSuccess }) => {
       const data = await res.json();
 
       if (res.ok) {
-        localStorage.setItem("role", "user");
-        localStorage.setItem("user", JSON.stringify(data.user)); // Lưu thông tin user
-        localStorage.setItem("token", data.token);
+        // API trả về role thật (user hoặc admin)
+        localStorage.setItem("role", data.user.role); 
+        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("token", data.token); // API trả về token thật
         onLoginSuccess();
-        navigate("/dashboard"); // Chuyển hướng user
+        // Không gọi setLoading(false) khi thành công (để App.jsx lo chuyển hướng)
       } else {
         setError(data.message || "Đã xảy ra lỗi");
+        setLoading(false); // Tắt loading nếu API lỗi
       }
     } catch (error) {
       console.error("Lỗi đăng nhập:", error);
       setError("Không thể kết nối đến máy chủ!");
-    } finally {
-      setLoading(false); // Tắt loading
-    }
+      setLoading(false); // Tắt loading nếu fetch lỗi
+    } 
   };
 
   return (
@@ -78,10 +82,10 @@ const Login = ({ onLoginSuccess }) => {
             <h2>Đăng nhập</h2>
 
             <input
-              type="text" // Có thể đổi thành "email"
+              type="text"
               name="email"
               placeholder="Email"
-              value={formData.email} // Thêm value để control input
+              value={formData.email}
               onChange={handleChange}
               required
             />
@@ -89,7 +93,7 @@ const Login = ({ onLoginSuccess }) => {
               type="password"
               name="password"
               placeholder="Mật khẩu"
-              value={formData.password} // Thêm value để control input
+              value={formData.password}
               onChange={handleChange}
               required
             />
@@ -100,7 +104,6 @@ const Login = ({ onLoginSuccess }) => {
               {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
 
-            {/* --- (CODE MỚI) THÊM LINK QUÊN MẬT KHẨU --- */}
             <div className="auth-links">
               <p>
                 Chưa có tài khoản?{" "}
@@ -112,8 +115,6 @@ const Login = ({ onLoginSuccess }) => {
                 Quên mật khẩu?
               </a>
             </div>
-            {/* --- KẾT THÚC CODE MỚI --- */}
-
           </form>
         </div>
       </div>

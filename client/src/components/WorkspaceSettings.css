@@ -1,0 +1,331 @@
+/* src/components/WorkspaceSettings.css */
+
+.workspace-settings-container {
+  max-width: 1000px;
+  margin: 24px auto;
+  padding: 24px;
+  background: var(--bg-secondary-color);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* Header của trang */
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+.settings-header .header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.settings-header .back-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  color: var(--text-color);
+  background: var(--bg-color);
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+.settings-header .back-link:hover {
+  background: var(--border-color);
+}
+.settings-header .header-title h2 {
+  margin: 0 0 4px 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+.settings-header .header-title p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary-color);
+}
+
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.settings-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0 0 24px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Copy style từ modal cũ */
+.invite-section {
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.1),
+    rgba(118, 75, 162, 0.1)
+  );
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.invite-section h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+.invite-form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.email-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: all 0.2s ease;
+}
+.email-input:focus {
+  border-color: var(--primary-color);
+}
+.role-select {
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  background: var(--bg-color);
+  color: var(--text-color);
+  cursor: pointer;
+  outline: none;
+  min-width: 120px;
+}
+.invite-btn {
+  padding: 12px 24px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.invite-btn:hover {
+  background: var(--primary-hover-color);
+}
+
+.members-section h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+.members-table {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.table-header {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1.5fr 1.2fr 0.8fr;
+  gap: 16px;
+  padding: 16px;
+  background: var(--bg-color);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-secondary-color);
+  text-transform: uppercase;
+}
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1.5fr 1.2fr 0.8fr;
+  gap: 16px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  align-items: center;
+  transition: all 0.2s ease;
+}
+.table-row:hover {
+  background: var(--bg-color);
+}
+.col-member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.member-avatar-small {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: var(--border-color);
+}
+.col-member .member-name {
+  font-weight: 500;
+  color: var(--text-color);
+}
+.col-email {
+  color: var(--text-secondary-color);
+  font-size: 14px;
+  word-break: break-all;
+}
+.col-role {
+  display: flex;
+  align-items: center;
+}
+.role-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--primary-color);
+}
+.role-badge.owner {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: white;
+}
+.role-select-inline {
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--bg-color);
+  color: var(--text-color);
+  cursor: pointer;
+  outline: none;
+}
+.role-select-inline:hover {
+  border-color: var(--primary-color);
+}
+.col-joined {
+  font-size: 13px;
+  color: var(--text-secondary-color);
+}
+.col-actions {
+  display: flex;
+  justify-content: center;
+}
+.remove-member-btn {
+  padding: 8px;
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  display: flex;
+}
+.remove-member-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Style Vùng nguy hiểm */
+.danger-zone {
+  border-color: #ef4444;
+}
+.danger-zone h3 {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+.danger-zone-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: rgba(239, 68, 68, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+.danger-info h4 {
+  margin: 0 0 4px 0;
+  color: #ef4444;
+  font-size: 16px;
+}
+.danger-info p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary-color);
+}
+.btn-danger {
+  padding: 10px 20px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+/* Responsive (Giống modal cũ) */
+@media (max-width: 768px) {
+  .invite-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .table-header {
+    display: none;
+  }
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .col-member,
+  .col-email,
+  .col-role,
+  .col-joined,
+  .col-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .col-member::before {
+    content: "Thành viên: ";
+    font-weight: 600;
+  }
+  .col-email::before {
+    content: "Email: ";
+    font-weight: 600;
+  }
+  .col-role::before {
+    content: "Vai trò: ";
+    font-weight: 600;
+  }
+  .col-joined::before {
+    content: "Tham gia: ";
+    font-weight: 600;
+  }
+  .danger-zone-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}

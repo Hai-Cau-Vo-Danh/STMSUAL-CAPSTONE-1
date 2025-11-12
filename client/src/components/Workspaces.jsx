@@ -1,6 +1,7 @@
+// src/components/Workspaces.jsx
 import React, { useState, useEffect } from "react";
 import "./Workspaces.css";
-import { BsPlus, BsThreeDots, BsStar, BsStarFill, BsPeopleFill, BsLock, BsGlobe } from "react-icons/bs";
+import { BsPlus, BsThreeDots, BsStar, BsStarFill, BsPeopleFill, BsLock, BsGlobe, BsPencil, BsTrash } from "react-icons/bs"; // Thêm icon
 import { FiSearch, FiGrid, FiList } from "react-icons/fi";
 import { IoMdClose } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
@@ -18,17 +19,22 @@ function Workspaces() {
   // Workspaces data from API
   const [workspaces, setWorkspaces] = useState([]);
 
+  // --- (CODE MỚI) ---
+  const [isEditMode, setIsEditMode] = useState(false); // Trạng thái Sửa hay Tạo
+  const [currentWsId, setCurrentWsId] = useState(null); // ID của workspace đang sửa
+  const [menuOpenFor, setMenuOpenFor] = useState(null); // ID của workspace đang mở menu
+  // --- (KẾT THÚC CODE MỚI) ---
+
   const [newWorkspace, setNewWorkspace] = useState({
     name: "",
     description: "",
     type: "private",
     color: "#667eea",
-    icon: "�"
+    icon: "💼"
   });
 
-  // Fetch workspaces on component mount
+  // (useEffect fetch data giữ nguyên)
   useEffect(() => {
-    // Check if user is logged in
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
     
@@ -39,7 +45,7 @@ function Workspaces() {
     }
     
     fetchWorkspaces();
-  }, []);
+  }, [navigate]); // Thêm navigate vào dependency array
 
   const fetchWorkspaces = async () => {
     try {
@@ -59,10 +65,10 @@ function Workspaces() {
     }
   };
 
-  // Filter workspaces
+  // (Filter workspaces giữ nguyên)
   const filteredWorkspaces = workspaces.filter(ws => {
     const matchSearch = ws.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                       ws.description.toLowerCase().includes(searchQuery.toLowerCase());
+                       (ws.description && ws.description.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchFilter = filterType === "all" ||
                        (filterType === "starred" && ws.starred) ||
                        (filterType === "private" && ws.type === "private") ||
@@ -70,26 +76,78 @@ function Workspaces() {
     return matchSearch && matchFilter;
   });
 
-  const handleCreateWorkspace = async () => {
+  // --- (HÀM ĐÃ SỬA) ---
+  const handleOpenCreateModal = () => {
+    setIsEditMode(false); // Chế độ Tạo mới
+    setNewWorkspace({ // Reset form
+      name: "",
+      description: "",
+      type: "private",
+      color: "#667eea",
+      icon: "💼"
+    });
+    setShowCreateModal(true);
+  };
+  
+  // --- (HÀM MỚI) ---
+  const handleOpenEditModal = (workspace) => {
+    setIsEditMode(true); // Chế độ Sửa
+    setCurrentWsId(workspace.id); // Lưu ID
+    setNewWorkspace({ // Điền form
+      name: workspace.name,
+      description: workspace.description || "",
+      type: workspace.type,
+      color: workspace.color,
+      icon: workspace.icon
+    });
+    setShowCreateModal(true);
+    setMenuOpenFor(null); // Đóng menu
+  };
+
+  // --- (HÀM ĐÃ SỬA) ---
+  const handleSubmitWorkspace = async () => {
     if (!newWorkspace.name.trim()) return;
     
-    try {
-      const created = await workspaceService.createWorkspace(newWorkspace);
-      setWorkspaces([created, ...workspaces]);
-      setShowCreateModal(false);
-      setNewWorkspace({
-        name: "",
-        description: "",
-        type: "private",
-        color: "#667eea",
-        icon: "💼"
-      });
-    } catch (err) {
-      console.error('Error creating workspace:', err);
-      alert('Không thể tạo workspace. Vui lòng thử lại.');
+    if (isEditMode) {
+      // Logic SỬA
+      try {
+        const updated = await workspaceService.updateWorkspace(currentWsId, newWorkspace);
+        setWorkspaces(workspaces.map(ws => 
+          ws.id === currentWsId ? { ...ws, ...updated } : ws
+        ));
+        setShowCreateModal(false);
+      } catch (err) {
+        console.error('Error updating workspace:', err);
+        alert(err.response?.data?.error || 'Không thể cập nhật. Vui lòng thử lại.');
+      }
+    } else {
+      // Logic TẠO MỚI (như cũ)
+      try {
+        const created = await workspaceService.createWorkspace(newWorkspace);
+        setWorkspaces([created, ...workspaces]);
+        setShowCreateModal(false);
+      } catch (err) {
+        console.error('Error creating workspace:', err);
+        alert('Không thể tạo workspace. Vui lòng thử lại.');
+      }
     }
   };
 
+  // --- (HÀM MỚI) ---
+  const handleDeleteWorkspace = async (workspaceId) => {
+    setMenuOpenFor(null); // Đóng menu
+    if (window.confirm("Bạn có chắc muốn xóa workspace này? MỌI DỮ LIỆU (bảng, thẻ...) bên trong sẽ bị xóa vĩnh viễn.")) {
+      try {
+        await workspaceService.deleteWorkspace(workspaceId);
+        setWorkspaces(workspaces.filter(ws => ws.id !== workspaceId));
+      } catch (err) {
+        console.error('Error deleting workspace:', err);
+        alert(err.response?.data?.error || 'Không thể xóa. Vui lòng thử lại.');
+      }
+    }
+  };
+  
+  // (toggleStar, openWorkspace giữ nguyên)
   const toggleStar = async (id) => {
     try {
       const workspace = workspaces.find(ws => ws.id === id);
@@ -103,7 +161,7 @@ function Workspaces() {
   };
 
   const openWorkspace = (id) => {
-    navigate(`/workspace/${id}`);
+    navigate(`/app/workspace/${id}`);
   };
 
   const predefinedColors = [
@@ -121,14 +179,16 @@ function Workspaces() {
           <h1>Workspaces</h1>
           <p className="workspace-subtitle">Quản lý các không gian làm việc của bạn</p>
         </div>
-        <button className="btn-create-workspace" onClick={() => setShowCreateModal(true)}>
+        {/* --- (SỬA LẠI) --- */}
+        <button className="btn-create-workspace" onClick={handleOpenCreateModal}>
           <BsPlus /> Tạo Workspace
         </button>
       </div>
 
-      {/* Toolbar */}
+      {/* Toolbar (giữ nguyên) */}
       <div className="workspaces-toolbar">
-        <div className="search-filter-group">
+        {/* ... (search-filter-group và view-toggle giữ nguyên) ... */}
+         <div className="search-filter-group">
           <div className="search-box">
             <FiSearch />
             <input
@@ -138,9 +198,8 @@ function Workspaces() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-
           <div className="filter-buttons">
-            <button 
+             <button 
               className={filterType === "all" ? "active" : ""}
               onClick={() => setFilterType("all")}
             >
@@ -166,7 +225,6 @@ function Workspaces() {
             </button>
           </div>
         </div>
-
         <div className="view-toggle">
           <button 
             className={viewMode === "grid" ? "active" : ""}
@@ -183,7 +241,7 @@ function Workspaces() {
         </div>
       </div>
 
-      {/* Workspaces Grid/List */}
+      {/* Workspaces Grid/List (Loading/Error giữ nguyên) */}
       {loading ? (
         <div className="loading-state">
           <div className="spinner"></div>
@@ -222,6 +280,8 @@ function Workspaces() {
                 >
                   {workspace.icon}
                 </div>
+                
+                {/* --- (SỬA LẠI) Logic Nút 3 chấm --- */}
                 <div className="workspace-actions">
                   <button 
                     className={`star-btn ${workspace.starred ? 'starred' : ''}`}
@@ -229,10 +289,34 @@ function Workspaces() {
                   >
                     {workspace.starred ? <BsStarFill /> : <BsStar />}
                   </button>
-                  <button className="menu-btn" onClick={(e) => e.stopPropagation()}>
-                    <BsThreeDots />
-                  </button>
+                  
+                  {/* Chỉ Owner mới thấy nút 3 chấm */}
+                  {workspace.role === 'owner' && (
+                    <button 
+                      className="menu-btn" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpenFor(menuOpenFor === workspace.id ? null : workspace.id);
+                      }}
+                    >
+                      <BsThreeDots />
+                    </button>
+                  )}
+
+                  {/* Pop-up Menu (CODE MỚI) */}
+                  {menuOpenFor === workspace.id && (
+                    <div className="workspace-menu-popup" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={() => handleOpenEditModal(workspace)}>
+                        <BsPencil /> Sửa
+                      </button>
+                      <button onClick={() => handleDeleteWorkspace(workspace.id)} className="delete">
+                        <BsTrash /> Xóa
+                      </button>
+                    </div>
+                  )}
                 </div>
+                {/* --- (KẾT THÚC SỬA) --- */}
+
               </div>
 
               <div className="workspace-body">
@@ -271,12 +355,13 @@ function Workspaces() {
         </div>
       )}
 
-      {/* Create Workspace Modal */}
+      {/* Create/Edit Workspace Modal */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Tạo Workspace Mới</h2>
+              {/* --- (SỬA LẠI) Tiêu đề động --- */}
+              <h2>{isEditMode ? "Chỉnh sửa Workspace" : "Tạo Workspace Mới"}</h2>
               <button className="close-btn" onClick={() => setShowCreateModal(false)}>
                 <IoMdClose />
               </button>
@@ -363,8 +448,9 @@ function Workspaces() {
               <button className="btn-cancel" onClick={() => setShowCreateModal(false)}>
                 Hủy
               </button>
-              <button className="btn-submit" onClick={handleCreateWorkspace}>
-                Tạo Workspace
+              {/* --- (SỬA LẠI) --- */}
+              <button className="btn-submit" onClick={handleSubmitWorkspace}>
+                {isEditMode ? "Lưu thay đổi" : "Tạo Workspace"}
               </button>
             </div>
           </div>

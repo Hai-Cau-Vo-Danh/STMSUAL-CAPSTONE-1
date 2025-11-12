@@ -1,272 +1,494 @@
-.profile-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  /* Use main background color */
+/* Biến CSS (Tóm tắt từ index.css của bạn)
+:root {
+  --bg-color: #f8f9fa;
+  --bg-secondary-color: #ffffff;
+  --text-color: #212529;
+  --text-secondary-color: #6c757d;
+  --border-color: #dee2e6;
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --border-radius-main: 12px;
+  --primary-color-rgb: 102, 126, 234;
+}
+*/
+
+/* (ĐÃ XÓA) Toàn bộ CSS cho .profile-layout-root và .profile-page-header đã bị xóa */
+
+.profile-page-container {
+  padding: 20px 5%;
+  background-color: var(--bg-secondary-color);
+  min-height: calc(100vh - 60px); /* Điều chỉnh nếu có Header/Footer cố định */
+  color: var(--text-color);
+  max-width: 1400px; /* Giới hạn chiều rộng tổng thể */
+  margin: 0 auto;
+}
+
+/* ===== HEADER: Ảnh bìa và Avatar ===== */
+.profile-header-section {
   background-color: var(--bg-color);
-  min-height: 100vh;
-  padding: 40px;
-  font-family: "Poppins", sans-serif; /* Keep specific font if desired */
-  transition: background-color 0.3s ease; /* Add transition */
-}
-
-.profile-card {
-  background: var(--bg-secondary-color); /* Use secondary background */
-  width: 100%; /* Allow flexibility */
-  max-width: 450px; /* Set max-width */
-  padding: 30px;
-  border-radius: 20px;
-  box-shadow: 0 8px 30px var(--shadow-color); /* Use shadow variable */
-  border: 1px solid var(--border-color); /* Add subtle border */
-  transition: all 0.3s ease;
-}
-
-.profile-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 35px var(--shadow-color); /* Use shadow variable */
-  border-color: var(--primary-color); /* Highlight border on hover */
-}
-
-.profile-header {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  border-bottom: 1px solid var(--border-color); /* Use border variable */
-  padding-bottom: 15px;
+  border-radius: var(--border-radius-main);
+  box-shadow: 0 4px 12px var(--shadow-color);
   margin-bottom: 20px;
-  transition: border-color 0.3s ease; /* Add transition */
+  overflow: hidden;
+  position: relative;
+}
+
+.profile-cover-image {
+  height: 250px; /* Chiều cao ảnh bìa */
+  width: 100%;
+}
+
+.profile-cover-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-user-details-bar {
+  display: flex;
+  align-items: flex-end; /* Căn dưới cho các item */
+  padding: 0 30px 20px 30px;
+  position: relative;
+  top: -80px; /* Kéo lên trên ảnh bìa */
+  left: 0;
+  right: 0;
+  z-index: 1; /* Đảm bảo avatar nằm trên ảnh bìa */
+}
+
+.profile-avatar-wrapper {
+  width: 160px; /* Kích thước avatar */
+  height: 160px;
+  border-radius: 50%;
+  border: 5px solid var(--bg-color); /* Viền màu nền */
+  background-color: var(--bg-color);
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin-right: 20px;
+  flex-shrink: 0; /* Không cho avatar bị co lại */
 }
 
 .profile-avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  border: 3px solid var(--primary-color); /* Use primary color */
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease, border-color 0.3s ease; /* Add transitions */
 }
 
-.profile-avatar:hover {
-  transform: scale(1.05);
-  border-color: var(--secondary-color); /* Use secondary color */
+.profile-user-info-text {
+  flex-grow: 1;
+  padding-bottom: 10px; /* Để căn chỉnh với tên người dùng trên ảnh mẫu */
 }
 
-.profile-header h2 {
+.profile-username {
+  font-size: 28px;
+  font-weight: 700;
   margin: 0;
-  font-size: 1.5rem;
-  color: var(--text-color); /* Use text variable */
-  transition: color 0.3s ease; /* Add transition */
+  color: var(--text-color);
 }
 
-.profile-header p {
-  color: var(--text-secondary-color); /* Use secondary text variable */
-  font-weight: 500;
-  transition: color 0.3s ease; /* Add transition */
+.profile-member-status {
+  font-size: 15px;
+  color: var(--text-secondary-color);
+  margin: 5px 0 0;
 }
 
-.profile-info {
-  line-height: 1.8;
+.profile-member-status .dot {
+  margin: 0 5px;
 }
 
-.profile-info h3 {
-  color: var(--primary-color); /* Use primary color */
-  margin-bottom: 10px;
-  transition: color 0.3s ease; /* Add transition */
-}
+/* (ĐÃ XÓA) CSS cho .profile-view-posts-link đã bị xóa */
 
-.info-item {
+
+/* ===== (CODE MỚI) NÚT ĐIỀU HƯỚNG MỚI ===== */
+.profile-header-buttons {
   display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border-color); /* Use border variable */
-  transition: border-color 0.3s ease; /* Add transition */
-}
-.info-item:last-child {
-    border-bottom: none; /* Remove border for last item */
+  gap: 12px;
+  flex-shrink: 0;
+  padding-bottom: 10px; /* Căn lề giống .profile-user-info-text */
 }
 
-.info-item strong {
-  color: var(--text-color); /* Use text variable */
-  transition: color 0.3s ease; /* Add transition */
-}
-.info-item span {
-  color: var(--text-secondary-color); /* Use secondary text variable */
-  transition: color 0.3s ease; /* Add transition */
-}
-
-.profile-actions {
+.profile-nav-btn {
+  background: var(--bg-secondary-color);
+  color: var(--text-secondary-color);
+  border: 1px solid var(--border-color);
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
   display: flex;
-  justify-content: space-between; /* Keep buttons separated */
-  gap: 15px; /* Add gap */
-  margin-top: 25px;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 4px var(--shadow-color);
 }
 
-.edit-btn,
-.logout-btn {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  flex: 1; /* Make buttons share space if needed */
-  text-align: center;
-}
-
-.edit-btn {
-  background: var(--primary-color); /* Use primary color */
-  color: white; /* Keep white text */
-}
-
-.logout-btn {
-  background: #e74c3c; /* Keep semantic red */
-  color: white; /* Keep white text */
-}
-
-.edit-btn:hover {
-  background: var(--secondary-color); /* Use secondary color on hover */
-  opacity: 0.9;
-}
-
-.logout-btn:hover {
-  background: #c0392b; /* Keep semantic darker red */
-  opacity: 0.9;
-}
-
-/* --- CSS cho Modal --- */
-
-.modal-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background-color: rgba(0, 0, 0, 0.6); /* Slightly darker overlay */
-  display: flex; align-items: center; justify-content: center; z-index: 1000;
-}
-body.dark .modal-overlay {
-    background-color: rgba(0, 0, 0, 0.8); /* Even darker */
-}
-
-.modal-content {
-  background: var(--bg-secondary-color); /* Use secondary background */
-  padding: 24px; border-radius: 12px; width: 90%; max-width: 450px;
-  box-shadow: 0 5px 15px var(--shadow-color); /* Use shadow variable */
-  border: 1px solid var(--border-color); /* Add border */
-  animation: slide-down 0.3s ease-out;
-  transition: background-color 0.3s ease, border-color 0.3s ease; /* Add transitions */
-}
-
-@keyframes slide-down { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-.modal-header {
-  display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 1px solid var(--border-color); /* Use border variable */
-  padding-bottom: 16px; margin-bottom: 16px;
-  transition: border-color 0.3s ease; /* Add transition */
-}
-
-.modal-header h2 {
-  margin: 0; font-size: 1.25rem;
-  color: var(--text-color); /* Use text variable */
-  transition: color 0.3s ease; /* Add transition */
-}
-
-.close-btn {
-  background: none; border: none; font-size: 2rem; line-height: 1;
-  color: var(--text-secondary-color); /* Use secondary text variable */
-  cursor: pointer;
-  transition: color 0.3s ease; /* Add transition */
-}
-.close-btn:hover {
-  color: var(--text-color); /* Use text variable */
-}
-
-.modal-body .form-group { margin-bottom: 16px; }
-
-.form-group label {
-  display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem;
-  color: var(--text-secondary-color); /* Use secondary text variable */
-  transition: color 0.3s ease; /* Add transition */
-}
-
-.form-group input {
-  width: 100%; padding: 10px 12px;
-  border: 1px solid var(--border-color); /* Use border variable */
-  border-radius: 8px; font-size: 1rem; box-sizing: border-box;
-  background-color: var(--bg-color); /* Use main background */
-  color: var(--text-color); /* Use text variable */
-  transition: all 0.3s ease; /* Add transition */
-}
-.form-group input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    background-color: var(--bg-secondary-color);
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-}
-
-.modal-footer {
-  display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-color); /* Use border variable */
-  transition: border-color 0.3s ease; /* Add transition */
-}
-
-.btn-cancel,
-.btn-save {
-  padding: 10px 20px; border: none; border-radius: 8px; font-size: 1rem;
-  font-weight: 600; cursor: pointer; transition: all 0.3s ease;
-}
-
-.btn-cancel {
-  background-color: var(--bg-color); /* Use main background */
-  color: var(--text-secondary-color); /* Use secondary text variable */
-  border: 1px solid var(--border-color); /* Add border */
-}
-.btn-cancel:hover {
-  background-color: var(--bg-secondary-color); /* Use secondary background */
+.profile-nav-btn:hover {
+  background-color: var(--bg-color);
+  color: var(--text-color);
   border-color: var(--text-secondary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px var(--shadow-color);
 }
 
-.btn-save {
-  background-color: var(--primary-color); /* Use primary color */
-  color: white; /* Keep white text */
+/* Nút "Tạo tin đăng" nổi bật hơn */
+.profile-nav-btn.primary {
+  background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+  color: #fff;
+  border: none;
 }
-.btn-save:hover {
-  background-color: var(--secondary-color); /* Use secondary color */
+.profile-nav-btn.primary:hover {
+  background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+  color: #fff;
   opacity: 0.9;
 }
-
-/* Keep semantic error styles */
-.modal-error {
-  color: red; background-color: #ffebee; border: 1px solid red;
-  padding: 10px; border-radius: 8px; margin-bottom: 16px; text-align: center;
-}
-/* Optional: Adjust error colors slightly for dark mode */
-body.dark .modal-error {
-    background-color: #4d1a1a; /* Darker red background */
-    color: #ffcccc; /* Lighter red text */
-    border-color: #ff4d4d; /* Brighter red border */
-}
+/* ===== KẾT THÚC CODE MỚI ===== */
 
 
-/* Avatar Upload Styles */
-.avatar-upload-group { margin-bottom: 20px; }
+/* (ĐÃ XÓA) Toàn bộ CSS cho .profile-modules-section đã bị xóa */
 
-.avatar-preview-container { display: flex; align-items: center; gap: 16px; }
 
-.avatar-preview {
-  width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
-  border: 2px solid var(--border-color); /* Use border variable */
-  transition: border-color 0.3s ease; /* Add transition */
+/* ===== THÔNG TIN CƠ BẢN VÀ CÀI ĐẶT TÀI KHOẢN ===== */
+.profile-content-section {
+  display: flex;
+  gap: 20px;
 }
 
-.btn-change-avatar {
-  background-color: var(--bg-color); /* Use main background */
-  color: var(--text-secondary-color); /* Use secondary text variable */
-  padding: 8px 16px;
-  border: 1px solid var(--border-color); /* Use border variable */
-  border-radius: 8px; font-weight: 600; cursor: pointer;
+.profile-info-column {
+  flex: 1; /* Chiếm 1 phần */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.info-card {
+  background-color: var(--bg-color);
+  border-radius: var(--border-radius-main);
+  box-shadow: 0 4px 12px var(--shadow-color);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.info-icon {
+  font-size: 20px;
+  color: var(--primary-color); /* Màu icon */
+  flex-shrink: 0;
+}
+
+.info-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-label {
+  font-size: 14px;
+  color: var(--text-secondary-color);
+  margin-bottom: 3px;
+}
+
+.info-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.profile-settings-column {
+  flex: 1.5; /* Chiếm 1.5 phần, rộng hơn cột thông tin */
+  background-color: var(--bg-color);
+  border-radius: var(--border-radius-main);
+  box-shadow: 0 4px 12px var(--shadow-color);
+  padding: 30px;
+}
+
+.profile-settings-column h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 25px;
+  color: var(--text-color);
+}
+
+.setting-item {
+  margin-bottom: 20px;
+}
+
+.setting-item label {
+  display: block;
+  font-size: 15px;
+  color: var(--text-secondary-color);
+  margin-bottom: 8px;
+}
+
+.setting-item input[type="text"] {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: var(--bg-secondary-color);
+  color: var(--text-color);
+  transition: border-color 0.3s ease;
+  box-sizing: border-box; /* Thêm để padding không làm vỡ layout */
+}
+
+.setting-item input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb, 102, 126, 234), 0.2); /* Sử dụng biến màu RGB */
+}
+
+.save-changes-btn {
+  background: linear-gradient(to right, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.save-changes-btn:hover {
+  opacity: 0.95;
+  box-shadow: 0 4px 15px var(--shadow-color);
+  transform: translateY(-2px);
+}
+
+/* ===== Nút Hỗ trợ và Chat (Floating Buttons) ===== */
+.floating-buttons {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 1000;
+}
+
+.floating-buttons button {
+  width: 60px; /* Kích thước nút */
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
 }
 
-.btn-change-avatar:hover {
-  background-color: var(--bg-secondary-color); /* Use secondary background */
-  border-color: var(--text-secondary-color);
+.floating-buttons button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.help-button {
+  background-color: #667eea; /* Màu xanh tím */
+}
+
+.chat-button {
+  background-color: #f53838; /* Màu đỏ */
+}
+
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1200px) {
+  .profile-page-container {
+    padding: 20px 3%;
+  }
+  /* (ĐÃ XÓA) CSS Responsive cho header */
+}
+
+@media (max-width: 992px) {
+  /* (ĐÃ XÓA) CSS Responsive cho header */
+  
+  .profile-header-section {
+    margin-bottom: 15px;
+  }
+  .profile-user-details-bar {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    top: -100px;
+    padding-bottom: 10px;
+  }
+  .profile-avatar-wrapper {
+    margin-right: 0;
+    margin-bottom: 15px;
+    width: 140px;
+    height: 140px;
+  }
+  .profile-username {
+    font-size: 24px;
+  }
+  .profile-member-status {
+    font-size: 14px;
+  }
+
+  /* (CODE MỚI) Style cho các nút trên mobile */
+  .profile-header-buttons {
+    padding-bottom: 0;
+    margin-top: 10px;
+    flex-direction: column; /* Xếp chồng các nút */
+    width: 100%;
+    max-width: 300px; /* Giới hạn chiều rộng nút */
+  }
+  .profile-nav-btn {
+    width: 100%;
+    justify-content: center; /* Căn giữa text trong nút */
+  }
+  /* (ĐÃ XÓA) CSS Responsive cho module */
+
+  .profile-content-section {
+    flex-direction: column;
+    gap: 15px;
+  }
+  .profile-settings-column {
+    padding: 25px;
+  }
+}
+
+@media (max-width: 576px) {
+  /* (ĐÃ XÓA) CSS Responsive cho header */
+
+  .profile-page-container {
+    padding: 10px;
+  }
+  .profile-user-details-bar {
+    top: -80px;
+  }
+  .profile-avatar-wrapper {
+    width: 120px;
+    height: 120px;
+  }
+  .profile-username {
+    font-size: 22px;
+  }
+  .profile-member-status {
+    font-size: 13px;
+  }
+
+  /* (ĐÃ XÓA) CSS Responsive cho module */
+
+  .info-card {
+    padding: 15px;
+    gap: 10px;
+  }
+  .info-icon {
+    font-size: 18px;
+  }
+  .info-label {
+    font-size: 13px;
+  }
+  .info-value {
+    font-size: 15px;
+  }
+
+  .profile-settings-column h3 {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+  .setting-item input[type="text"] {
+    padding: 10px 12px;
+    font-size: 15px;
+  }
+  .save-changes-btn {
+    padding: 10px 20px;
+    font-size: 15px;
+  }
+
+  .floating-buttons {
+    bottom: 20px;
+    right: 20px;
+    gap: 10px;
+  }
+  .floating-buttons button {
+    width: 50px;
+    height: 50px;
+    font-size: 12px;
+  }
+}
+/* (Thêm vào cuối file Profile.css) */
+
+/* ===== (CODE MỚI) CSS CHO UPLOAD AVATAR ===== */
+.profile-avatar-wrapper {
+  position: relative; /* Cần để định vị lớp phủ */
+  cursor: pointer;
+}
+
+.avatar-upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.5); /* Màu nền mờ */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0; /* Ẩn đi mặc định */
+  transition: opacity 0.3s ease;
+  z-index: 2;
+}
+
+.profile-avatar-wrapper:hover .avatar-upload-overlay {
+  opacity: 1; /* Hiện lên khi hover */
+}
+
+.avatar-upload-icon {
+  font-size: 32px;
+  color: #ffffff;
+}
+.profile-avatar-frame {
+  position: absolute;
+  top: -10%; /* Mở rộng ra ngoài avatar một chút */
+  left: -10%;
+  width: 120%;
+  height: 120%;
+  object-fit: contain; /* Đảm bảo khung không bị méo */
+  z-index: 3; /* Nằm trên cả avatar và lớp overlay upload */
+  pointer-events: none; /* Để vẫn click được vào avatar bên dưới để upload */
+}
+
+/* 2. Danh hiệu (Title Badge) */
+.profile-title-badge {
+  display: inline-block;
+  font-size: 0.5em; /* Nhỏ bằng một nửa tên chính */
+  vertical-align: middle;
+  margin-left: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #FFD700, #FFA500); /* Mặc định màu vàng kim */
+  color: white;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  transform: translateY(-4px); /* Căn chỉnh cho đẹp mắt với text lớn */
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* Chỉnh sửa lại wrapper để chứa được khung avatar tràn ra ngoài */
+.profile-avatar-wrapper {
+  overflow: visible; /* QUAN TRỌNG: Để khung avatar lòi ra ngoài vòng tròn */
+}
+
+/* Đảm bảo ảnh avatar gốc vẫn tròn */
+.profile-avatar {
+  border-radius: 50%; 
+  position: relative;
+  z-index: 1;
+}
+
+/* Lớp phủ upload nằm đè lên avatar nhưng dưới khung */
+.avatar-upload-overlay {
+  border-radius: 50%; 
+  z-index: 2;
 }

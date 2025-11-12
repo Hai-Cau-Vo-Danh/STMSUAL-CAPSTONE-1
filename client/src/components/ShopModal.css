@@ -1,0 +1,235 @@
+/* ShopModal.css - High Contrast Version */
+
+.shop-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.6); /* Nền tối hơn để nổi bật modal */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.shop-modal-container {
+  background: #ffffff;
+  width: 90%;
+  max-width: 850px;
+  height: 85vh;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid #e5e7eb;
+}
+
+/* --- Header --- */
+.shop-header {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #ea580c, #c2410c); /* Cam đậm hơn */
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.shop-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.shop-balance {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.close-btn:hover { background: rgba(255,255,255,0.2); }
+
+/* --- Tabs --- */
+.shop-tabs {
+  display: flex;
+  background: #f3f4f6; /* Xám nhạt */
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6b7280; /* Xám trung tính */
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: #ea580c;
+  background: #e5e7eb;
+}
+
+.tab-btn.active {
+  color: #ea580c; /* Cam đậm */
+  background: #ffffff;
+  border-bottom: 3px solid #ea580c;
+}
+
+/* --- Content --- */
+.shop-content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  background-color: #f9fafb; /* Nền rất nhạt để card nổi bật */
+}
+
+/* Empty Message */
+.empty-msg {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 1.1rem;
+  color: #374151; /* Xám đậm - DỄ ĐỌC */
+  font-weight: 500;
+}
+
+/* Grid */
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* --- Shop Card --- */
+.shop-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.shop-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border-color: #fed7aa; /* Viền cam nhạt khi hover */
+}
+
+/* Preview Area */
+.shop-preview {
+  height: 100px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.preview-avatar {
+  width: 60px; height: 60px;
+  background: #d1d5db;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px;
+}
+
+.preview-title {
+  background: #e5e7eb;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
+}
+
+/* Info Text - KHẮC PHỤC LỖI KHÓ ĐỌC */
+.shop-info h4 {
+  margin: 0 0 6px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827; /* Đen đậm */
+}
+
+.shop-info p {
+  margin: 0 0 16px 0;
+  font-size: 0.9rem;
+  color: #4b5563; /* Xám đậm vừa phải, dễ đọc trên nền trắng */
+  line-height: 1.4;
+}
+
+/* Buttons */
+.shop-action {
+  margin-top: auto; /* Đẩy nút xuống đáy */
+}
+
+.btn-buy {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #ea580c; /* Cam */
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-buy:hover { background: #c2410c; }
+
+.btn-equip {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #10b981; /* Xanh lá */
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-equip:hover { background: #059669; }
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+}
+
+/* Animation */
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }

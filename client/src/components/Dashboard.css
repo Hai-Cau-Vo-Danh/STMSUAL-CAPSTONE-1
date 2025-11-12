@@ -500,3 +500,406 @@ body.dark .progress-fill::after { background: linear-gradient(90deg, transparent
   /* .modal-content { width: 95%; margin: 20px; } */
   /* .priority-options { flex-direction: column; } */
 }
+/* (Dán vào cuối file Dashboard.css) */
+
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.task-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-group-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0 0 4px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-group-title.overdue {
+  color: #ef4444;
+}
+.task-group-title.today {
+  color: #f59e0b;
+}
+.task-group-title.upcoming {
+  color: var(--text-secondary-color);
+}
+
+.task-item .task-meta {
+  display: flex;
+  flex-wrap: wrap; /* Cho phép xuống dòng nếu không đủ */
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.task-workspace {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary-color);
+  background: var(--bg-color);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.spinner-small {
+  width: 24px;
+  height: 24px;
+  margin: 40px auto;
+  border: 3px solid rgba(102, 126, 234, 0.2);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.my-tasks-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.my-tasks-modal-content {
+  background: var(--bg-secondary-color);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 800px;
+  height: 80vh; /* Chiều cao 80% */
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.my-tasks-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0; /* Ngăn header co lại */
+}
+
+.my-tasks-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.my-tasks-header .close-modal-btn {
+  font-size: 24px;
+  color: var(--text-secondary-color);
+  background: var(--bg-color);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.my-tasks-header .close-modal-btn:hover {
+  background: var(--border-color);
+  transform: rotate(90deg);
+}
+
+.my-tasks-list {
+  padding: 24px;
+  overflow-y: auto; /* Cho phép cuộn */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.my-tasks-list .task-item {
+  background: var(--bg-color);
+}
+.my-tasks-list .task-item:hover {
+  background: var(--bg-secondary-color);
+  border-color: var(--primary-color);
+}
+/* (Dán vào cuối file Dashboard.css) */
+
+/* Thanh bao ngoài (đảm bảo nó có chiều cao) */
+.progress-bar {
+  width: 100%;
+  height: 8px; /* <-- DÒNG QUAN TRỌNG */
+  background: var(--border-color); /* Màu nền mờ */
+  border-radius: 4px;
+  overflow: hidden; /* Quan trọng để bo góc */
+  margin: 8px 0;
+}
+
+/* Thanh năng lượng (tiến độ) */
+.progress-fill {
+  height: 100%;
+  background: var(--primary-color); /* Màu chính */
+  border-radius: 4px;
+  transition: width 0.5s ease-out; /* Hiệu ứng mượt mà */
+}
+
+/* Màu riêng cho thanh "Today's Tasks" */
+.progress-fill.tasks-progress {
+  /* Bạn có thể dùng màu xanh lá nếu muốn */
+  /* background: var(--success-color, #10b981); */ 
+  background: var(--primary-color);
+}
+.stat-icon.check-in-icon {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); 
+  color: #667eea;
+}
+
+/* Lưới 7 ngày */
+.week-days-grid {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.day-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary-color);
+  transition: all 0.2s ease;
+}
+
+.day-circle span {
+  line-height: 1.2;
+}
+
+.day-dot {
+  font-size: 14px;
+  height: 14px;
+}
+
+/* Khi là ngày hôm nay */
+.day-circle.today {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Khi đã điểm danh */
+.day-circle.checked {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.day-circle.checked .day-dot {
+  color: white;
+}
+
+/* Nút Điểm danh */
+.check-in-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--primary-color);
+  color: white;
+}
+
+.check-in-btn:hover:not(:disabled) {
+  background: var(--primary-hover-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.check-in-btn:disabled {
+  background: #10b981; /* Màu xanh lá khi đã hoàn thành */
+  color: white;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+/* Spinner nhỏ (đã có) */
+.spinner-small {
+  width: 24px;
+  height: 24px;
+  margin: 40px auto;
+  border: 3px solid rgba(102, 126, 234, 0.2);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.tomato-counter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  min-width: 100px;
+  justify-content: center;
+}
+
+.tomato-icon {
+  font-size: 15px;
+}
+
+.tomato-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1;
+}
+
+/* --- (CODE MỚI) Style cho Thẻ Điểm danh (Check-in) --- */
+
+/* Màu icon */
+.stat-icon.check-in-icon {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); 
+  color: #667eea;
+}
+
+/* Lưới 7 ngày */
+.week-days-grid {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.day-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary-color);
+  transition: all 0.2s ease;
+}
+
+.day-circle span {
+  line-height: 1.2;
+}
+
+.day-dot {
+  font-size: 14px;
+  height: 14px;
+}
+
+/* Khi là ngày hôm nay */
+.day-circle.today {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+}
+
+/* Khi đã điểm danh */
+.day-circle.checked {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.day-circle.checked .day-dot {
+  color: white;
+}
+
+/* Nút Điểm danh */
+.check-in-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--primary-color);
+  color: white;
+}
+
+.check-in-btn:hover:not(:disabled) {
+  background: var(--primary-hover-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.check-in-btn:disabled {
+  background: #10b981; /* Màu xanh lá khi đã hoàn thành */
+  color: white;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+/* Spinner nhỏ (đã có) */
+.spinner-small {
+  width: 24px;
+  height: 24px;
+  margin: 40px auto;
+  border: 3px solid rgba(102, 126, 234, 0.2);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.user-title-badge {
+  font-size: 0.6em;
+  vertical-align: middle;
+  background: linear-gradient(90deg, #FFD700, #FFA500); /* Màu vàng kim */
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+}

@@ -1,4 +1,4 @@
-/* File: Header.css */
+/* File: Header.css - Đã chỉnh sửa Logo Bo Tròn và TĂNG KÍCH THƯỚC */
 .header {
   display: flex;
   align-items: center;
@@ -21,22 +21,51 @@
   transition: background-color 0.3s ease;
 }
 
-/* Logo */
+/* Logo - ĐÃ CHỈNH SỬA CHO HÌNH TRÒN */
 .header-logo {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: 1px;
-  color: inherit;
-  /* Kế thừa màu từ header */
-  /* Thêm style cho logo img nếu có */
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  margin-left: 10px; /* Giảm margin trái */
+  flex-shrink: 0;
+  padding: 0 5px; /* Giảm padding */
+}
+
+.header-logo:hover {
+  opacity: 0.9;
+  transform: scale(1.03); /* Phóng to nhẹ khi hover */
 }
 
 .header-logo img {
-  height: 30px;
-  /* Ví dụ size logo */
-  margin-right: 8px;
+  height: 65px; /* **TĂNG KÍCH THƯỚC LOGO LÊN 50PX** */
+  width: 65px; /* Đảm bảo chiều rộng bằng chiều cao */
+  object-fit: contain;
+  
+  /* Bo tròn logo */
+  border-radius: 50%;
+  margin: 0 5px; 
+  
+  /* Hiệu ứng ánh sáng */
+  filter: brightness(1.1) drop-shadow(0 0 5px rgba(255, 255, 255, 0.4)); 
+  transition: filter 0.3s ease, height 0.3s ease;
   vertical-align: middle;
 }
+
+/* Tăng glow trong Dark Mode để logo nổi bật hơn */
+body.dark .header-logo img {
+  filter: brightness(1.2) drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)); /* Glow rõ hơn và sáng hơn chút */
+}
+
+/* Trong chế độ sáng, nếu header vẫn tối (đảm bảo độ sáng) */
+body:not(.dark) .header-logo img {
+  filter: brightness(1.1) drop-shadow(0 0 5px rgba(255, 255, 255, 0.4));
+}
+
 
 /* Search */
 .header-center {
@@ -59,13 +88,14 @@
   /* Nền mờ sáng */
   padding: 8px 14px;
   /* Giảm padding */
-  border-radius: 8px;
+  border-radius: 12px; /* TĂNG BO GÓC */
   /* Giảm bo góc */
   width: 100%;
   border: 1px solid transparent;
   /* Border ẩn */
   transition: all 0.3s ease;
-  position: relative; /* Thêm để dropdown gợi ý có thể absolute */
+  position: relative;
+  /* Thêm để dropdown gợi ý có thể absolute */
 }
 
 body.dark .header-search {
@@ -146,7 +176,7 @@ body.dark .header-search {
   font-size: 18px;
   /* Giảm kích thước icon */
   padding: 8px;
-  border-radius: 50%;
+  border-radius: 12px; /* TĂNG BO GÓC */
   cursor: pointer;
   transition: background-color 0.2s ease, opacity 0.2s ease;
   position: relative;
@@ -337,7 +367,7 @@ body.dark .notification-item.unread {
   gap: 8px;
   padding: 4px 8px;
   /* Giảm padding */
-  border-radius: 6px;
+  border-radius: 10px; /* TĂNG BO GÓC */
   /* Giảm bo góc */
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -395,13 +425,13 @@ body.dark .notification-item.unread {
   /* Căn phải */
   background: var(--bg-secondary-color);
   /* Nền sáng */
-  border-radius: 8px;
+  border-radius: 12px; /* TĂNG BO GÓC MENU */
   /* Giảm bo góc */
   box-shadow: 0 6px 20px var(--shadow-color);
   /* Tăng đổ bóng */
   border: 1px solid var(--border-color);
   min-width: 180px;
-  padding: 6px;
+  padding: 8px; /* TĂNG PADDING */
   /* Giảm padding */
   z-index: 1000;
   animation: slideDown 0.2s ease-out;
@@ -424,7 +454,7 @@ body.dark .notification-item.unread {
 .dropdown-item {
   padding: 8px 12px;
   /* Giảm padding */
-  border-radius: 6px;
+  border-radius: 8px; /* TĂNG BO GÓC MỤC */
   /* Giảm bo góc */
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
@@ -525,134 +555,13 @@ body.dark .notification-item.unread {
   }
 
   /* Ẩn mũi tên */
+  .header-logo img {
+    height: 30px; 
+    width: 30px; /* Đảm bảo hình tròn trên mobile */
+  }
 }
 
-/* Trong Header.css */
-.header-logo img {
-  height: 35px;
-  /* Điều chỉnh chiều cao logo */
-  width: auto;
-  /* Chiều rộng tự động theo tỷ lệ */
-  /* Có thể thêm filter invert cho dark mode nếu logo màu tối */
-  /* body.dark & { filter: invert(1) brightness(1.5); } */
-}
-
-/* src/components/Header.css */
-
-/* ... (phần CSS trước đó của header-logo) ... */
-
-.header-logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  /* color: inherit; */
-  /* Bỏ cái này nếu dùng logo ảnh */
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: opacity 0.2s ease;
-  margin-left: 20px;
-  /* Thêm margin trái cho logo */
-  flex-shrink: 0;
-  /* Đảm bảo logo không bị co lại */
-}
-
-.header-logo:hover {
-  opacity: 0.85;
-}
-
-.header-logo img {
-  height: 40px;
-  /* Tăng chiều cao logo */
-  width: auto;
-  /* --- (CODE MỚI) ĐIỀU CHỈNH MÀU SẮC CHO DARK MODE --- */
-  filter: brightness(1.8) drop-shadow(0 0 5px rgba(138, 158, 245, 0.4));
-  /* Làm sáng và thêm glow nhẹ */
-  transition: filter 0.3s ease;
-  /* Thêm hiệu ứng chuyển đổi mượt mà */
-  /* Có thể thêm hiệu ứng hover cho logo img */
-  /* &:hover {
-        transform: scale(1.05);
-    } */
-}
-
-/* Trong chế độ sáng, nếu header vẫn tối */
-body:not(.dark) .header-logo img {
-  filter: brightness(1.8) drop-shadow(0 0 5px rgba(138, 158, 245, 0.4));
-  /* Giữ nguyên cho header tối của light mode */
-}
-
-/* Trong chế độ tối */
-body.dark .header-logo img {
-  filter: brightness(1.8) drop-shadow(0 0 8px rgba(138, 158, 245, 0.6));
-  /* Sáng hơn và glow rõ hơn cho dark mode */
-}
-
-/* src/components/Header.css */
-
-/* ... (other styles) ... */
-
-.header-search {
-  /* ... other styles ... */
-  border-radius: 12px;
-  /* Tăng bo góc cho ô tìm kiếm */
-}
-
-.user-profile-toggle {
-  /* ... other styles ... */
-  border-radius: 10px;
-  /* Tăng bo góc */
-}
-
-.user-dropdown {
-  /* ... other styles ... */
-  border-radius: 12px;
-  /* Tăng bo góc menu */
-  padding: 8px;
-}
-
-.dropdown-item {
-  /* ... other styles ... */
-  border-radius: 8px;
-  /* Tăng bo góc các mục */
-}
-
-.icon-btn {
-  /* Nút chuông */
-  /* ... other styles ... */
-  border-radius: 12px;
-  /* Tăng bo góc */
-}
-
-/* Trong Header.css */
-
-.header-logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-decoration: none; /* Bỏ gạch chân của Link */
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: opacity 0.2s ease, transform 0.2s ease; /* Thêm hiệu ứng */
-  padding: 0 10px; /* Thêm padding */
-}
-.header-logo:hover {
-  opacity: 0.9;
-  transform: scale(1.03); /* Phóng to nhẹ khi hover */
-}
-
-/* Thêm quy tắc này để set kích thước logo */
-.header-logo img {
-  height: 35px; /* Điều chỉnh chiều cao logo */
-  width: auto;
-  object-fit: contain; /* Đảm bảo logo không bị méo */
-}
-
-/* ... (CSS còn lại giữ nguyên) ... */
-
-/* ===== SEARCH SUGGESTIONS DROPDOWN ===== */
+/* ===== SEARCH SUGGESTIONS DROPDOWN (Giữ nguyên) ===== */
 .search-suggestions {
   position: absolute;
   top: calc(100% + 8px);
@@ -778,6 +687,21 @@ body.dark .suggestion-icon {
   }
 
   .suggestion-keywords {
-    display: none; /* Ẩn keywords trên mobile */
+    display: none;
+    /* Ẩn keywords trên mobile */
   }
+}
+/* (Thêm vào cuối file Header.css) */
+
+.notification-empty {
+  text-align: center;
+  color: var(--text-secondary-color);
+  font-style: italic;
+  padding: 20px 16px !important;
+  font-size: 14px;
+}
+
+.notification-empty:hover {
+  background-color: transparent !important;
+  cursor: default;
 }

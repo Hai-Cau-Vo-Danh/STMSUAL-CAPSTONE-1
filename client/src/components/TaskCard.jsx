@@ -1,20 +1,15 @@
-import React from 'react';
+// src/components/TaskCard.jsx
+import React, { forwardRef } from 'react'; 
 import './TaskCard.css';
-// --- (CODE MỚI) IMPORT ICON 3 CHẤM ---
-import { BsThreeDots, BsGearFill } from 'react-icons/bs';
-// --- KẾT THÚC CODE MỚI ---
+import { BsGearFill } from 'react-icons/bs';
 import attachmentIcon from '../assets/TaskManagement-icon/Icon__Paperclip.svg';
 import clockIcon from '../assets/TaskManagement-icon/Icon__Clock.svg';
 import flagGreen from '../assets/TaskManagement-icon/Icon__Flag__green.svg';
 import flagYellow from '../assets/TaskManagement-icon/Icon__Flag__yellow.svg';
 import flagRed from '../assets/TaskManagement-icon/Icon__Flag__red.svg';
-import avatarMan from '../assets/TaskManagement-icon/Avatar-man.svg';
-import avatarMan2 from '../assets/TaskManagement-icon/Avatar_man2.svg';
-import avatarWoman from '../assets/TaskManagement-icon/Avatar__woman.svg';
 import defaultAvatar from '../assets/Trangchu/avt.png';
 
-// (ĐÃ SỬA) Nhận thêm prop 'onEditClick'
-function TaskCard({ task, isOverlay = false, onEditClick, ...props }) {
+const TaskCard = forwardRef(({ task, members = [], isOverlay = false, onEditClick, ...props }, ref) => {
 
   const priorityFlags = {
     low: flagGreen,
@@ -22,46 +17,35 @@ function TaskCard({ task, isOverlay = false, onEditClick, ...props }) {
     high: flagRed,
   };
   
-  const avatars = {
-    1: avatarMan,
-    2: avatarMan2,
-    3: avatarWoman
-  };
-
+  const assignedMember = members.find(m => m.id === task.assignee);
   const priorityKey = task.priority || 'medium';
   const priorityClass = `priority-${priorityKey}`;
   const overlayClass = isOverlay ? 'overlay-style' : '';
 
   return (
     <div
+      ref={ref} 
       className={`task-card ${priorityClass} ${overlayClass}`}
-      {...props} // Áp dụng props DND (style, ref)
+      {...props}
     >
       <div className="task-header">
         <h4 className="task-title">{task.title}</h4>
         
-        {/* --- (CODE MỚI) NÚT BÁNH RĂNG ĐỂ CHỈNH SỬA --- */}
-        {/* Chỉ hiển thị nút khi không phải là overlay (đang kéo) */}
         {!isOverlay && (
           <button 
             className="task-edit-btn" 
             title="Chỉnh sửa task"
-            // Ngăn sự kiện "pointerdown" (chuột nhấn xuống) lan ra ngoài
-            // để DND kit không nhận nhầm đây là sự kiện kéo
-            onPointerDownCapture={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()} // Ngăn kéo thẻ
+            onMouseDown={(e) => e.stopPropagation()} // Backup cho trình duyệt cũ
             onClick={(e) => {
-                e.stopPropagation(); // Ngăn click lan ra ngoài
-                if (onEditClick) onEditClick(); // Gọi hàm mở modal
+                e.stopPropagation(); 
+                if (onEditClick) onEditClick(); 
             }}
           >
-            <BsGearFill /> {/* 👈 SỬA THÀNH ICON BÁNH RĂNG */}
+            <BsGearFill /> 
           </button>
         )}
-        {/* --- KẾT THÚC CODE MỚI --- */}
-
       </div>
-
-      {/* ... (Phần còn lại của TaskCard giữ nguyên) ... */}
       
       {task.tags && task.tags.length > 0 && (
         <div className="task-tags-display">
@@ -73,6 +57,7 @@ function TaskCard({ task, isOverlay = false, onEditClick, ...props }) {
       {task.description && (
         <p className="task-description">{task.description}</p>
       )}
+
       <div className="task-footer">
         <div className="task-meta">
           {priorityFlags[priorityKey] && (
@@ -82,19 +67,36 @@ function TaskCard({ task, isOverlay = false, onEditClick, ...props }) {
               className="priority-flag"
             />
           )}
-          {task.date && (
+          {task.dueDate && (
             <span className="task-date">
               <img src={clockIcon} alt="Date" className="meta-icon" />
-              {task.date}
+              {new Date(task.dueDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
             </span>
           )}
         </div>
+        
         <div className="task-avatars">
-          {/* (Tạm ẩn avatars) */}
+          {assignedMember ? (
+            <img 
+              src={assignedMember.avatar || defaultAvatar} 
+              alt={assignedMember.name} 
+              title={`Gán cho: ${assignedMember.name}`}
+              className="avatar" 
+            />
+          ) : (
+            <div 
+              className="avatar-placeholder" 
+              title="Chưa gán cho ai"
+            >
+              ?
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
-};
+}); 
+
+TaskCard.displayName = 'TaskCard';
 
 export default TaskCard;

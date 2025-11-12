@@ -1,55 +1,144 @@
-/* 🌿 Tone màu tổng thể */
+/* --- BẢNG MÀU MỚI (Đã thêm 2 màu) --- */
 :root {
-  --primary: #4f46e5;
-  --accent: #a78bfa;
-  --background: #f9fafb;
-  --text: #1e1b4b;
+  --lp-primary: #007BFF;
+  --lp-secondary: #00C6FF;
+  --lp-accent: #00D4B1;
+  --lp-bg: #ffffff;
+  --lp-bg-alt: #f4f7fa;
+  --lp-text: #222;
+  --lp-text-muted: #555;
+  --lp-footer-bg: #1a202c;
+  
+  /* --- MÀU MỚI --- */
+  --lp-purple: #8A2BE2; /* Blue Violet */
+  --lp-pink: #FF69B4; /* Hot Pink */
+}
+body.dark {
+  --lp-bg: var(--bg-color, #121826);
+  --lp-bg-alt: var(--bg-secondary-color, #1f2a3e);
+  --lp-text: var(--text-color, #e5e7eb);
+  --lp-text-muted: var(--text-secondary-color, #9ca3af);
+  --lp-footer-bg: #111827;
 }
 
-/* Tổng thể */
-.landing-container {
-  background-color: var(--background);
-  font-family: "Poppins", sans-serif;
-  color: var(--text);
-  overflow-x: hidden;
+/* --- KEYFRAMES (ĐÃ SỬA VÀ THÊM MỚI) --- */
+
+/* Keyframe cho "Mặt trời" (giữ nguyên) */
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.7; }
+  70% { transform: scale(1.05); opacity: 0.8; }
+  100% { transform: scale(0.95); opacity: 0.7; }
 }
 
-/* ===== HERO ===== */
-.hero {
-  text-align: center;
-  padding: 140px 20px 120px;
-  background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%);
+/* Keyframe quỹ đạo (Tinh chỉnh bán kính) */
+@keyframes orbit-1 {
+  from { transform: rotate(0deg) translateX(190px) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(190px) rotate(-360deg); }
 }
-.hero-title {
-  font-size: 3.2rem;
-  line-height: 1.3;
+@keyframes orbit-2 {
+  from { transform: rotate(0deg) translateX(120px) rotate(0deg); }
+  to { transform: rotate(-360deg) translateX(120px) rotate(360deg); }
+}
+
+/* --- 4 QUỸ ĐẠO MỚI --- */
+@keyframes orbit-3 {
+  from { transform: rotate(0deg) translateX(150px) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(150px) rotate(-360deg); }
+}
+@keyframes orbit-4 {
+  from { transform: rotate(0deg) translateX(220px) rotate(0deg); }
+  to { transform: rotate(-360deg) translateX(220px) rotate(360deg); }
+}
+@keyframes orbit-5 {
+  from { transform: rotate(0deg) translateX(90px) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(90px) rotate(-360deg); }
+}
+@keyframes orbit-6 {
+  from { transform: rotate(0deg) translateX(250px) rotate(0deg); }
+  to { transform: rotate(-360deg) translateX(250px) rotate(360deg); }
+}
+
+/* --- TỔNG THỂ --- */
+.landing-container-new {
+  background-color: var(--lp-bg);
+  font-family: "Poppins", -apple-system, sans-serif;
+  color: var(--lp-text);
+  overflow-x: hidden; /* Rất quan trọng */
+}
+
+/* --- 🌟 HỆ THỐNG ANIMATION KHI CUỘN 🌟 --- */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+.animate-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+/* --- HERO SECTION MỚI --- */
+.hero-new {
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 80px 5%;
+  background-color: var(--lp-bg);
+  flex-wrap: wrap;
+}
+.hero-new.animate-on-scroll {
+  transform: translateY(0);
+}
+.hero-text {
+  flex-basis: 50%;
+  padding-right: 40px;
+}
+.hero-text > * {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease-out 0.2s, transform 0.6s ease-out 0.2s;
+}
+.hero-new.is-visible .hero-text > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+.hero-new.is-visible .hero-text > *:nth-child(2) { transition-delay: 0.35s; }
+.hero-new.is-visible .hero-text > *:nth-child(3) { transition-delay: 0.5s; }
+
+.hero-title-new {
+  font-size: 3.5rem;
+  line-height: 1.2;
   font-weight: 700;
+  color: var(--lp-text);
 }
-.gradient-text {
-  background: linear-gradient(90deg, var(--primary), var(--accent));
+.gradient-text-new {
+  background: linear-gradient(90deg, var(--lp-primary), var(--lp-accent));
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
 }
-.hero-sub {
+.hero-sub-new {
   font-weight: 500;
-  color: #4338ca;
+  font-size: 3rem;
+  color: var(--lp-text-muted);
 }
-.hero-desc {
-  max-width: 680px;
-  margin: 25px auto;
-  color: #4b5563;
-  font-size: 1.1rem;
-  line-height: 1.6;
+.hero-desc-new {
+  max-width: 550px;
+  margin: 25px 0;
+  color: var(--lp-text-muted);
+  font-size: 1.15rem;
+  line-height: 1.7;
 }
-.hero-buttons {
-  justify-content: center;
+.hero-buttons-new {
   display: flex;
   align-items: center;
   margin-top: 30px;
+  gap: 15px;
 }
-.btn-primary {
-  background: var(--primary);
+.btn-primary-new {
+  background: var(--lp-primary);
   color: #fff;
   border: none;
   padding: 14px 34px;
@@ -58,151 +147,304 @@
   font-weight: 600;
   transition: all 0.3s ease;
   cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
 }
-.btn-primary:hover {
-  transform: translateY(-2px);
-  background: #4338ca;
+.btn-primary-new:hover {
+  transform: translateY(-3px);
+  background: #0056b3;
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
 }
-.btn-outline {
-  margin-left: 12px;
+.btn-outline-new {
   padding: 14px 34px;
-  border: 2px solid var(--primary);
+  border: 2px solid var(--lp-primary);
   background: transparent;
-  color: var(--primary);
+  color: var(--lp-primary);
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
   transition: 0.3s;
 }
-.btn-outline:hover {
-  background: var(--primary);
+.btn-outline-new:hover {
+  background: var(--lp-primary);
   color: white;
 }
 
-/* ===== FEATURES ===== */
-.features {
-  padding: 100px 20px;
+/* Visual (Các khối hình học động) */
+.hero-visual {
+  flex-basis: 40%;
+  position: relative;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0; /* Mặc định ẩn */
+  transform: scale(0.8); /* Hơi thu nhỏ */
+  transition: opacity 1s ease-out 0.5s, transform 1s ease-out 0.5s; /* Xuất hiện sau text */
+}
+.hero-new.is-visible .hero-visual {
+  opacity: 1;
+  transform: scale(1);
+}
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(45deg, var(--lp-primary), var(--lp-accent));
+  opacity: 0.7;
+  
+  /* Giữ transition này để hiệu ứng hover (glow) mượt mà */
+  transition: opacity 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* --- ĐÃ SỬA VÀ THÊM MỚI CSS BONG BÓNG --- */
+
+.shape-1 {
+  /* "Mặt trời" */
+  width: 200px;
+  height: 200px;
+  animation: pulse 6s ease-in-out infinite;
+  /* (Giữ màu gradient gốc) */
+}
+.shape-2 {
+  /* "Hành tinh" 1 (cũ) */
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(45deg, var(--lp-accent), var(--lp-secondary));
+  animation: orbit-1 12s linear infinite; /* Tốc độ 12s */
+}
+.shape-3 {
+  /* "Hành tinh" 2 (cũ) */
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(45deg, var(--lp-primary), var(--lp-pink));
+  animation: orbit-2 8s linear infinite; /* Tốc độ 8s, đổi màu */
+}
+
+/* --- 4 HÀNH TINH MỚI --- */
+.shape-4 {
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(45deg, var(--lp-purple), var(--lp-pink));
+  animation: orbit-3 10s linear infinite; /* Tốc độ 10s */
+}
+.shape-5 {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(45deg, var(--lp-secondary), var(--lp-purple));
+  animation: orbit-4 15s linear infinite reverse; /* Tốc độ 15s, ngược chiều */
+}
+.shape-6 {
+  width: 20px;
+  height: 20px;
+  background: var(--lp-accent); /* 1 màu cho hạt nhỏ */
+  animation: orbit-5 7s linear infinite; /* Tốc độ 7s */
+}
+.shape-7 {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(45deg, var(--lp-pink), var(--lp-secondary));
+  animation: orbit-6 20s linear infinite reverse; /* Tốc độ 20s, ngược chiều */
+}
+
+
+/* --- FEATURES SECTION MỚI --- */
+.features-new {
+  padding: 100px 5%;
   text-align: center;
+  background-color: var(--lp-bg-alt);
 }
-.section-header h2 {
-  font-size: 2rem;
+.section-header-new {
+  max-width: 700px;
+  margin: 0 auto 50px;
+}
+.section-header-new h2 {
+  font-size: 2.2rem;
   margin: 10px 0;
+  color: var(--lp-text);
 }
-.badge {
-  background: var(--accent);
+.badge-new {
+  background: linear-gradient(90deg, var(--lp-primary), var(--lp-secondary));
   color: white;
-  padding: 6px 18px;
+  padding: 8px 20px;
   border-radius: 20px;
   font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
 }
-.features-grid {
+.features-grid-new {
   margin-top: 50px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 30px;
 }
-.feature-card {
-  background: white;
+.feature-card-new {
+  background: var(--lp-bg);
   border-radius: 16px;
   padding: 40px 30px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  border: 1px solid var(--border-color, #eee);
+  box-shadow: 0 4px 10px var(--shadow-color, rgba(0,0,0,0.03));
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.5s ease-out;
 }
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+.feature-card-new:hover {
+  transform: translateY(-8px) !important; /* Luôn cho phép hover */
+  box-shadow: 0 12px 28px rgba(0, 123, 255, 0.1);
+  border-color: var(--lp-primary);
 }
-.feature-icon {
-  font-size: 2.2rem;
-  margin-bottom: 10px;
+.features-new.is-visible .feature-card-new {
+  opacity: 1;
+  transform: translateY(0);
 }
+.features-new.is-visible .feature-card-new:nth-child(2) {
+  transition-delay: 0.15s;
+}
+.features-new.is-visible .feature-card-new:nth-child(3) {
+  transition-delay: 0.3s;
+}
+.feature-icon-new { font-size: 2.5rem; margin-bottom: 15px; }
+.feature-card-new h3 { font-size: 1.3rem; color: var(--lp-text); margin-bottom: 10px; }
+.feature-card-new p { color: var(--lp-text-muted); line-height: 1.6; }
 
-/* ===== CTA ===== */
-.cta {
-  background: linear-gradient(90deg, var(--primary), var(--accent));
+/* --- CTA SECTION MỚI --- */
+.cta-new {
+  background: linear-gradient(90deg, var(--lp-primary), var(--lp-secondary));
   color: white;
   text-align: center;
   padding: 100px 20px;
 }
-.cta-box h2 {
-  font-size: 2rem;
+.cta-new.animate-on-scroll {
+  transform: scale(0.9);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+.cta-new.is-visible {
+  transform: scale(1);
+}
+.cta-box-new h2 {
+  font-size: 2.2rem;
   font-weight: 700;
   margin-bottom: 15px;
 }
-.cta-box p {
+.cta-box-new p {
   max-width: 600px;
   margin: 0 auto 30px;
   line-height: 1.6;
   font-size: 1.1rem;
+  opacity: 0.9;
 }
-.btn-cta {
+.btn-cta-new {
   background: white;
-  color: var(--primary);
+  color: var(--lp-primary);
   font-weight: 700;
   padding: 14px 36px;
   border-radius: 10px;
   border: none;
   cursor: pointer;
   transition: 0.3s;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
-.btn-cta:hover {
-  transform: translateY(-2px);
-  background: #f9fafb;
+.btn-cta-new:hover {
+  transform: translateY(-3px);
+  background: #f4f7fa;
 }
 
-/* ===== FOOTER ===== */
-.footer {
-  background: #1e1b4b;
-  color: #d1d5db;
+/* --- FOOTER MỚI --- */
+.footer-new {
+  background: var(--lp-footer-bg);
+  color: #a0aec0;
   padding: 60px 20px 40px;
 }
-.footer-inner {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
+.footer-inner-new {
   max-width: 1100px;
-  margin: 0 auto 30px;
-}
-.footer h3 {
-  color: white;
-}
-.footer-links a {
-  display: block;
-  color: #d1d5db;
-  margin-bottom: 8px;
-  text-decoration: none;
-}
-.footer-links a:hover {
-  color: white;
-}
-.footer-bottom {
+  margin: 0 auto;
   text-align: center;
+}
+.footer-inner-new h3 {
+  color: white;
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+}
+.footer-links-new {
+  margin: 20px 0;
+}
+.footer-links-new a {
+  color: #a0aec0;
+  margin: 0 15px;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-links-new a:hover {
+  color: white;
+}
+.footer-bottom-new {
   font-size: 0.9rem;
   opacity: 0.8;
-}
-/* Thêm vào Header.css */
-
-.header-logo {
-  font-size: 1.5rem; /* Tăng kích thước */
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: inherit; /* Kế thừa màu từ header */
-  text-decoration: none; /* Bỏ gạch chân */
-  display: flex; /* Căn chỉnh nếu có logo img */
-  align-items: center;
-  gap: 8px;
-  transition: opacity 0.2s ease; /* Hiệu ứng hover */
-}
-.header-logo:hover {
-    opacity: 0.85; /* Mờ đi chút khi hover */
+  margin-top: 20px;
 }
 
-/* Style cho logo img nếu bạn thêm vào */
-.header-logo img {
-    height: 32px;
-    width: auto;
-    /* Có thể thêm filter invert cho dark mode nếu logo màu tối */
-    /* body.dark & { filter: invert(1) brightness(1.5); } */
+/* --- RESPONSIVE (ĐÃ CẬP NHẬT) --- */
+@media (max-width: 992px) {
+  .hero-new {
+    flex-direction: column;
+    text-align: center;
+    padding-top: 100px;
+  }
+  .hero-text {
+    padding-right: 0;
+    flex-basis: 100%;
+    order: 2;
+  }
+  .hero-visual {
+    flex-basis: 100%;
+    order: 1;
+    margin-bottom: 40px;
+    min-height: 250px;
+  }
+  .hero-desc-new { margin: 25px auto; }
+  .hero-buttons-new { justify-content: center; }
+  
+  /* Cỡ bong bóng trên di động */
+  .shape-1 { width: 150px; height: 150px; }
+  .shape-2 { width: 80px; height: 80px; }
+  .shape-5 { width: 60px; height: 60px; }
+  .shape-7 { width: 45px; height: 45px; }
+
+  
+  /* Thu nhỏ quỹ đạo trên di động */
+  @keyframes orbit-1 {
+    from { transform: rotate(0deg) translateX(130px) rotate(0deg); }
+    to   { transform: rotate(360deg) translateX(130px) rotate(-360deg); }
+  }
+  @keyframes orbit-2 {
+    from { transform: rotate(0deg) translateX(90px) rotate(0deg); }
+    to   { transform: rotate(-360deg) translateX(90px) rotate(360deg); }
+  }
+  @keyframes orbit-3 {
+    from { transform: rotate(0deg) translateX(110px) rotate(0deg); }
+    to   { transform: rotate(360deg) translateX(110px) rotate(-360deg); }
+  }
+  @keyframes orbit-4 {
+    from { transform: rotate(0deg) translateX(150px) rotate(0deg); }
+    to   { transform: rotate(-360deg) translateX(150px) rotate(360deg); }
+  }
+  @keyframes orbit-5 {
+    from { transform: rotate(0deg) translateX(70px) rotate(0deg); }
+    to   { transform: rotate(360deg) translateX(70px) rotate(-360deg); }
+  }
+  @keyframes orbit-6 {
+    from { transform: rotate(0deg) translateX(170px) rotate(0deg); }
+    to   { transform: rotate(-360deg) translateX(170px) rotate(360deg); }
+  }
 }
 
-/* ... (Phần CSS còn lại của Header.css giữ nguyên) ... */
+@media (max-width: 480px) {
+  .hero-title-new { font-size: 2.8rem; }
+  .hero-sub-new { font-size: 2.2rem; }
+  .hero-buttons-new { flex-direction: column; }
+}
+
+/* --- HIỆU ỨNG HOVER BONG BÓNG (Giữ nguyên) --- */
+.shape:hover {
+  animation-play-state: paused; /* Tạm dừng animation (kể cả orbit/pulse) */
+  opacity: 1;
+  box-shadow: 0 0 25px 5px var(--lp-accent);
+}

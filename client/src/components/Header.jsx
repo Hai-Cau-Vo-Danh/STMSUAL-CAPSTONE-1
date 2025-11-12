@@ -1,45 +1,49 @@
+// src/components/Header.jsx
 import React, { useState, useEffect } from "react";
 import "./Header.css";
 import { BsBellFill, BsSearch } from "react-icons/bs";
 import { IoMdArrowDropdown } from "react-icons/io";
 import { useNavigate, Link } from "react-router-dom";
 import defaultAvatar from "../assets/Trangchu/avt.png";
-import logoImage from "../assets/logo-stmsual.png"; // ⚠️ Đảm bảo đường dẫn này đúng
-
-// --- (CODE MỚI) IMPORT ---
+import logoImage from "../assets/LOGO.png";
 import { useTranslation } from 'react-i18next';
-// --- KẾT THÚC CODE MỚI ---
+import axios from 'axios'; 
+import { useNotificationClick } from '../context/NotificationContext'; 
 
-function Header({ onLogout }) {
-  // --- (CODE MỚI) GỌI HOOK ---
+// --- (SỬA LỖI 1) Sửa lỗi double-slash (//api) ---
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, '');
+
+function Header({ onLogout, isLoggedIn }) { 
   const { t } = useTranslation();
-  // --- KẾT THÚC CODE MỚI ---
-// Đặt tên biến cho id search
   const [searchId, setSearchId] = useState("search");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
-
- 
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false); // Thêm lại state này
-  const [notificationCount, setNotificationCount] = useState(3); // Thêm lại state này
-  const navigate = useNavigate();
+  
+  const navigate = useNavigate(); 
+  const { setNotificationToOpen } = useNotificationClick(); 
+
   const [username, setUsername] = useState("User");
   const [avatar, setAvatar] = useState(defaultAvatar);
 
-  // Danh sách gợi ý tìm kiếm
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [loadingNotifs, setLoadingNotifs] = useState(false);
+
   const searchSuggestionList = [
-    { title: "Dashboard", keywords: ["dashboard", "trang chủ", "bảng điều khiển"], route: "/dashboard", icon: "📊" },
-    { title: "Tasks", keywords: ["task", "nhiệm vụ", "công việc"], route: "/tasks", icon: "✅" },
-    { title: "Notes", keywords: ["note", "ghi chú", "ghi nhớ"], route: "/notes", icon: "📝" },
-    { title: "Calendar", keywords: ["calendar", "lịch", "lich"], route: "/calendar", icon: "📅" },
-    { title: "Pomodoro", keywords: ["pomodoro", "hẹn giờ", "đồng hồ"], route: "/pomodoro", icon: "⏰" },
-    { title: "AI Assistant", keywords: ["ai", "assistant", "trợ lý", "chatbot"], route: "/ai-assistant", icon: "🤖" },
-    { title: "Workspaces", keywords: ["workspace", "không gian làm việc", "nhóm"], route: "/workspaces", icon: "🏢" },
-    { title: "Study Room", keywords: ["study", "học", "phòng học", "room"], route: "/study-room", icon: "📚" },
-    { title: "Settings", keywords: ["setting", "cài đặt", "thiết lập"], route: "/settings", icon: "⚙️" },
-    { title: "Profile", keywords: ["profile", "hồ sơ", "tài khoản", "account"], route: "/profile", icon: "👤" },
+    { title: "Dashboard", keywords: ["dashboard", "trang chủ"], route: "/app/dashboard", icon: "📊" },
+    { title: "Tasks", keywords: ["task", "nhiệm vụ"], route: "/app/tasks", icon: "✅" },
+    { title: "Notes", keywords: ["note", "ghi chú"], route: "/app/notes", icon: "📝" },
+    { title: "Calendar", keywords: ["calendar", "lịch"], route: "/app/calendar", icon: "📅" },
+    { title: "Pomodoro", keywords: ["pomodoro", "hẹn giờ"], route: "/app/pomodoro", icon: "⏰" },
+    { title: "AI Assistant", keywords: ["ai", "assistant", "trợ lý"], route: "/app/ai-assistant", icon: "🤖" },
+    { title: "Workspaces", keywords: ["workspace", "nhóm"], route: "/app/workspaces", icon: "🏢" },
+    { title: "Study Room", keywords: ["study", "học", "phòng học"], route: "/app/study-room", icon: "📚" },
+    { title: "Settings", keywords: ["setting", "cài đặt"], route: "/app/settings", icon: "⚙️" },
+    { title: "Profile", keywords: ["profile", "hồ sơ"], route: "/app/profile", icon: "👤" },
+    { title: "Forum", keywords: ["forum", "diễn đàn", "bài viết"], route: "/app/forum", icon: "💬" },
   ];
 
   useEffect(() => {
@@ -53,95 +57,171 @@ function Header({ onLogout }) {
     } catch (e) { console.error("Lỗi localStorage:", e); }
   }, []);
 
-  // Xử lý thay đổi input tìm kiếm
+  // (useEffect Lấy Thông báo giữ nguyên)
+  useEffect(() => {
+    if (!isLoggedIn) return; 
+
+    const fetchNotifications = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return; 
+
+      setLoadingNotifs(true);
+      try {
+        const authHeader = { headers: { 'Authorization': `Bearer ${token}` } };
+        // --- (SỬA LỖI 1) Đã sửa API_URL ---
+        const res = await axios.get(`${API_URL}/api/notifications`, authHeader); 
+        setNotifications(res.data.notifications);
+        setNotificationCount(res.data.unread_count);
+      } catch (err) {
+        console.error("Lỗi tải thông báo:", err);
+      } finally {
+        setLoadingNotifs(false);
+      }
+    };
+    
+    fetchNotifications();
+    
+    const interval = setInterval(fetchNotifications, 60000); // 1 phút
+    return () => clearInterval(interval);
+    
+  }, [isLoggedIn]); 
+
+  // (Các hàm Search giữ nguyên)
   const handleSearchInput = (event) => {
     const value = event.target.value;
     setSearchQuery(value);
-
     if (value.trim().length > 0) {
-      // Lọc gợi ý dựa trên từ khóa
       const filtered = searchSuggestionList.filter(item =>
         item.keywords.some(keyword => keyword.includes(value.toLowerCase())) ||
         item.title.toLowerCase().includes(value.toLowerCase())
       );
-      setSuggestions(filtered.slice(0, 5)); // Giới hạn 5 gợi ý
+      setSuggestions(filtered.slice(0, 5));
       setShowSuggestions(true);
     } else {
       setShowSuggestions(false);
       setSuggestions([]);
     }
   };
-
-  // Xử lý click vào gợi ý
   const handleSuggestionClick = (route) => {
     navigate(route);
     setSearchQuery("");
     setShowSuggestions(false);
   };
-
-  // Xử lý sự kiện tìm kiếm
   const handleSearch = (event) => {
     if (event.key === 'Enter') {
       const query = event.target.value.trim();
       if (!query) return;
-
-      console.log("🔍 Từ khóa tìm kiếm:", query);
-
-      // Tìm route phù hợp
       const match = searchSuggestionList.find(item =>
         item.keywords.some(keyword => query.toLowerCase().includes(keyword))
       );
-
-      if (match) {
-        navigate(match.route);
-      } else {
-        // Default → trang kết quả tìm kiếm tổng hợp
-        navigate(`/search?query=${encodeURIComponent(query)}`);
-      }
-      
-      // Xóa nội dung sau khi tìm kiếm
+      if (match) { navigate(match.route); } 
+      else { navigate(`/app/search?query=${encodeURIComponent(query)}`); }
       setSearchQuery("");
       setShowSuggestions(false);
     }
   };
 
-
+  // (useEffect Click Outside giữ nguyên)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showUserMenu && !event.target.closest('.header-user-profile')) {
         setShowUserMenu(false);
       }
-      // Thêm: Đóng notification khi click ra ngoài
       if (showNotifications && !event.target.closest('.notification-wrapper')) {
         setShowNotifications(false);
       }
-      // Đóng suggestions khi click ra ngoài
       if (showSuggestions && !event.target.closest('.header-search')) {
         setShowSuggestions(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => { document.removeEventListener('mousedown', handleClickOutside); };
-  }, [showUserMenu, showNotifications, showSuggestions]); // Thêm showSuggestions vào dependency
+  }, [showUserMenu, showNotifications, showSuggestions]);
 
-  // Thông báo mẫu (Giữ lại từ file cũ của bạn)
-  const notifications = [
-{ id: 1, message: "Bạn có 3 tasks cần hoàn thành hôm nay", time: "5 phút trước", unread: true },
-    { id: 2, message: "Pomodoro session đã hoàn thành", time: "15 phút trước", unread: true },
-    { id: 3, message: "Deadline: Hoàn thành bài tập React", time: "1 giờ trước", unread: false },
-  ];
+  // (Hàm Xóa tất cả Thông báo giữ nguyên)
+  const handleClearAll = async () => {
+    if (notificationCount === 0) return;
+    
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const authHeader = { headers: { 'Authorization': `Bearer ${token}` } };
+      // --- (SỬA LỖI 1) Đã sửa API_URL ---
+      await axios.post(`${API_URL}/api/notifications/mark-read`, {}, authHeader);
+      setNotificationCount(0);
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    } catch (err) {
+      console.error("Lỗi khi xóa thông báo:", err);
+    }
+  };
+  
+  // (Hàm Format Thời gian giữ nguyên)
+  const formatTimeAgo = (isoDate) => {
+    const date = new Date(isoDate);
+    const seconds = Math.floor((new Date() - date) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " năm trước";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " tháng trước";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " ngày trước";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " giờ trước";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " phút trước";
+    return "Vài giây trước";
+  };
+
+  // --- (SỬA LỖI 2) Nâng cấp hàm click thông báo ---
+  const handleNotificationClick = (notif) => {
+    setShowNotifications(false);
+    
+    // Nhóm Forum
+    if (notif.type === 'new_comment' || notif.type === 'new_reaction') {
+      setNotificationToOpen({ type: 'new_comment', postId: notif.reference_id });
+      navigate('/app/forum');
+    } 
+    // Nhóm Workspace
+    else if (notif.type === 'workspace_invite') {
+      navigate('/app/workspaces');
+    } 
+    // (SỬA LẠI) Cả hai loại này đều trỏ đến workspace
+    else if (notif.type === 'card_assigned' || notif.type === 'new_card_comment') {
+      navigate(`/app/workspace/${notif.reference_id}`);
+    } 
+    // Nhóm Lịch
+    else if (notif.type === 'event_reminder') {
+      navigate('/app/calendar');
+    }
+    // Nhóm Task
+    else if (
+        notif.type === 'task_completed' || 
+        notif.type === 'task_due_soon' ||
+        notif.type === 'task_overdue_1' ||
+        notif.type === 'task_overdue_2_email'
+    ) {
+      navigate('/app/tasks');
+    }
+    
+    // Nhóm Admin (không cần click)
+    else if (notif.type === 'report_resolved' || notif.type === 'post_deleted_by_admin') {
+      // Không làm gì cả
+    }
+  };
+  // --- KẾT THÚC SỬA ---
+
 
   return (
     <header className="header">
-      <Link to="/dashboard" className="header-logo">
+      <Link to="/app/dashboard" className="header-logo"> 
         <img src={logoImage} alt="STMSUAL Logo" />
       </Link>
 
-      {/* Search */}
       <div className="header-center">
+        {/* (Phần Search giữ nguyên) */}
         <div className="header-search">
           <BsSearch className="search-icon" />
-          {/* --- (ĐÃ SỬA) DÙNG t() --- */}
           <input 
             id={searchId} 
             value={searchQuery}
@@ -151,8 +231,6 @@ function Header({ onLogout }) {
             placeholder={t('header.searchPlaceholder')} 
             className="search-input" 
           />
-          
-          {/* Gợi ý tìm kiếm */}
           {showSuggestions && suggestions.length > 0 && (
             <div className="search-suggestions">
               {suggestions.map((item, index) => (
@@ -173,17 +251,16 @@ function Header({ onLogout }) {
         </div>
       </div>
 
-      {/* User & Notifications */}
       <div className="header-right">
-        {/* --- (ĐÃ SỬA) CẬP NHẬT LẠI LOGIC THÔNG BÁO --- */}
+        {/* HIỂN THỊ THÔNG BÁO ĐỘNG */}
         <div className="notification-wrapper">
           <button
             className="icon-btn notification-btn"
             aria-label={t('header.notifications')}
-            onClick={() => setShowNotifications(!showNotifications)} // Sửa: Dùng state
+            onClick={() => setShowNotifications(!showNotifications)}
           >
             <BsBellFill />
-            {notificationCount > 0 && ( // Sửa: Dùng state
+            {notificationCount > 0 && (
               <span className="notification-badge">{notificationCount}</span>
             )}
           </button>
@@ -194,17 +271,32 @@ function Header({ onLogout }) {
                 <h3>{t('header.notifications')}</h3>
                 <button
                   className="clear-btn"
-                  onClick={() => setNotificationCount(0)}
+                  onClick={handleClearAll}
                 >
                   {t('header.clearAll')}
                 </button>
               </div>
+              
               <div className="notification-list">
-                {notifications.map((notif) => (
-                  <div key={notif.id} className={`notification-item ${notif.unread ? "unread" : ""}`}>
+                {loadingNotifs && (
+                  <div className="notification-item notification-empty">Đang tải...</div>
+                )}
+                {!loadingNotifs && notifications.length === 0 && (
+                  <div className="notification-item notification-empty">
+                    Không có thông báo mới.
+                  </div>
+                )}
+                
+                {!loadingNotifs && notifications.map((notif) => (
+                  <div 
+                    key={notif.notification_id} // (SỬA LẠI) Dùng key chuẩn từ DB
+                    className={`notification-item ${!notif.is_read ? "unread" : ""}`}
+                    onClick={() => handleNotificationClick(notif)} 
+                    style={{ cursor: 'pointer' }} 
+                  >
                     <div className="notification-content">
-                      <p className="notification-message">{notif.message}</p>
-                      <span className="notification-time">{notif.time}</span>
+                      <p className="notification-message">{notif.content}</p>
+                      <span className="notification-time">{formatTimeAgo(notif.created_at)}</span>
                     </div>
                   </div>
                 ))}
@@ -212,9 +304,8 @@ function Header({ onLogout }) {
             </div>
           )}
         </div>
-        {/* --- KẾT THÚC SỬA --- */}
-
-
+        
+        {/* (Phần User Profile giữ nguyên) */}
         <div className="header-user-profile">
           <div
             className="user-profile-toggle"
@@ -226,20 +317,28 @@ function Header({ onLogout }) {
             <span className="user-name">{username}</span>
             <IoMdArrowDropdown className={`dropdown-icon ${showUserMenu ? 'active' : ''}`} />
           </div>
-{showUserMenu && (
+          
+          {showUserMenu && (
             <div className="user-dropdown">
-              {/* --- (ĐÃ SỬA) DÙNG t() --- */}
-              <div role="button" tabIndex={0} className="dropdown-item" onClick={() => { navigate("/profile"); setShowUserMenu(false); }}>
+              <Link to="/app/profile" className="dropdown-item" onClick={() => setShowUserMenu(false)}>
                 👤 {t('header.profile')}
-              </div>
-              <div role="button" tabIndex={0} className="dropdown-item" onClick={(e) => { e.stopPropagation(); navigate("/settings"); setShowUserMenu(false); }}>
+              </Link>
+              <Link to="/app/settings" className="dropdown-item" onClick={() => setShowUserMenu(false)}>
                 ⚙️ {t('header.settings')}
-              </div>
+              </Link>
               <div className="dropdown-divider"></div>
-              <div role="button" tabIndex={0} className="dropdown-item logout" onClick={() => { if (onLogout) { onLogout(); } navigate("/login"); setShowUserMenu(false); }}>
+              <div 
+                role="button" 
+                tabIndex={0} 
+                className="dropdown-item logout" 
+                onClick={() => { 
+                  if (onLogout) { onLogout(); } 
+                  navigate("/login"); 
+                  setShowUserMenu(false); 
+                }}
+              >
                 🚪 {t('header.logout')}
               </div>
-              {/* --- KẾT THÚC SỬA --- */}
             </div>
           )}
         </div>
