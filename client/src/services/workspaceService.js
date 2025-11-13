@@ -1,7 +1,8 @@
 import axios from "axios";
 
-// (Đã sửa lỗi //api)
-const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, '');
+// ⚠️ SỬA ĐỔI QUAN TRỌNG: Thay VITE_API_URL bằng VITE_BACKEND_URL
+// VITE_BACKEND_URL sẽ là https://stmsuai-capstone.onrender.com
+const BASE_URL = (import.meta.env.VITE_BACKEND_URL || "http://localhost:5000").replace(/\/$/, '');
 const API_URL = `${BASE_URL}/api`;
 
 const getAuthHeader = () => {
@@ -15,7 +16,7 @@ const getAuthHeader = () => {
   };
 };
 
-// (Hàm getUserId - chúng ta cần nó ở đây)
+// (Hàm getUserId - giữ nguyên)
 const getUserId = () => {
     try { 
       const u = localStorage.getItem("user"); 
@@ -29,7 +30,7 @@ const getUserId = () => {
 
 
 export const workspaceService = {
-  // (Tất cả các hàm cũ từ getAllWorkspaces... đến moveCard... giữ nguyên)
+  // (Tất cả các hàm từ getAllWorkspaces... đến getLeaderboard... giữ nguyên)
   getAllWorkspaces: async () => {
     const response = await axios.get(`${API_URL}/workspaces`, getAuthHeader());
     return response.data;
