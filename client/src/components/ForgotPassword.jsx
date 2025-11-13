@@ -4,6 +4,9 @@ import './auth.css';
 import loginArt from "../assets/DangNhap/login-art.png";
 import { BsEnvelope, BsArrowLeft, BsCheckCircle, BsExclamationCircle } from "react-icons/bs";
 
+// ⚠️ ĐÃ SỬA: Định nghĩa API_BASE từ biến môi trường
+const API_BASE = import.meta.env.VITE_BACKEND_URL || '';
+
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -17,7 +20,8 @@ const ForgotPassword = () => {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/forgot-password", {
+      // ⚠️ ĐÃ SỬA: Sử dụng API_BASE thay vì localhost
+      const res = await fetch(`${API_BASE}/api/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
