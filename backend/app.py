@@ -2001,7 +2001,7 @@ def _save_manual_stop_session(room_id: str, timer_state: dict):
         
 @socketio.on('send_message')
 def handle_send_message(data):
-    """Nhận tin nhắn chat từ client và broadcast cho phòng (Kèm thông tin Shop Cosmetics)."""
+    """Nhận tin nhắn chat từ client và broadcast cho phòng (Kèm thông tin Shop & Rank)."""
     user_sid = request.sid
     room_id = data.get('room_id')
     message_text = data.get('message')
@@ -2016,8 +2016,6 @@ def handle_send_message(data):
     sender_avatar_url = user_info.get('avatar_url')
     sender_user_id = user_info.get('user_id') # Lấy ID để query DB
 
-    print(f"💬 Message in room {room_id} from {sender_username}: {message_text}")
-
     # --- (CODE SỬA) Lấy thông tin trang bị (Cosmetics) từ DB ---
     cosmetics = None
     if sender_user_id:
@@ -2028,7 +2026,8 @@ def handle_send_message(data):
                 cosmetics = {
                     "name_color": user_db.equipped_name_color,
                     "title": user_db.equipped_title,
-                    "frame": user_db.equipped_frame_url
+                    "frame": user_db.equipped_frame_url,
+                    "rank_title": user_db.rank_title # <--- (MỚI) Thêm dòng này
                 }
         except Exception as e:
             print(f"⚠️ Lỗi lấy cosmetics: {e}")
@@ -2042,7 +2041,7 @@ def handle_send_message(data):
         'message': message_text,
         'sid': user_sid, 
         'avatar_url': sender_avatar_url,
-        'cosmetics': cosmetics # Giờ biến này đã được định nghĩa (hoặc là None)
+        'cosmetics': cosmetics 
         }, 
         room=room_id)
     
@@ -3077,7 +3076,7 @@ def add_list(workspace_id):
 # ✅ API: Lấy tất cả Posts (Feed) - ĐÃ NÂNG CẤP
 @app.route('/api/posts', methods=['GET'])
 def get_posts():
-    print("--- GET /api/posts ĐƯỢC GỌI (v2 - Reactions) ---")
+    print("--- GET /api/posts ĐƯỢC GỌI (v3 - Rank Title) ---")
     
     user_id, token_error = get_user_id_from_token()
     
@@ -3085,6 +3084,7 @@ def get_posts():
     try:
         db = next(get_db())
         
+        # Tải bài viết kèm thông tin người đăng (Post.user)
         posts_db = db.query(Post)\
             .options(joinedload(Post.user))\
             .order_by(desc(Post.created_at))\
@@ -3093,15 +3093,13 @@ def get_posts():
 
         posts_list = []
         for post in posts_db:
-            # Lấy tất cả reactions cho post này
+            # Lấy reactions
             all_reactions = db.query(Reaction).filter(Reaction.post_id == post.post_id).all()
-            
-            # Đếm số lượng cho từng loại reaction
             reaction_counts = {}
             for r in all_reactions:
                 reaction_counts[r.reaction_type] = reaction_counts.get(r.reaction_type, 0) + 1
 
-            # Tìm reaction của user hiện tại (nếu có)
+            # Tìm reaction của user hiện tại
             user_reaction = None
             if user_id:
                 for r in all_reactions:
@@ -3117,13 +3115,19 @@ def get_posts():
                 "content": post.content,
                 "image_url": post.image_url,
                 "created_at": post.created_at.isoformat(),
-                "reaction_counts": reaction_counts, # Trả về object đếm
+                "reaction_counts": reaction_counts,
                 "comment_count": comment_count,
-                "user_reaction": user_reaction, # Trả về reaction của user (vd: "like", "haha", null)
+                "user_reaction": user_reaction,
                 "author": {
                     "user_id": post.user.user_id,
                     "username": post.user.username,
-                    "avatar_url": post.user.avatar_url
+                    "avatar_url": post.user.avatar_url,
+                    
+                    # --- (THÊM MỚI) Các thông tin trang bị ---
+                    "equipped_name_color": post.user.equipped_name_color,
+                    "equipped_title": post.user.equipped_title,
+                    "rank_title": post.user.rank_title # <--- QUAN TRỌNG: Danh hiệu xếp hạng
+                    # ----------------------------------------
                 }
             })
             
@@ -4679,9 +4683,10 @@ def mark_notifications_read():
 # --- KẾT THÚC API THÔNG BÁO ---    
 
 # === (CODE MỚI) API CHO "MY TASKS" DASHBOARD ===
+# ✅ API: Lấy Task cho Dashboard (v6 - Thêm nhóm Ngày mai & Fix Timezone)
 @app.route('/api/me/tasks', methods=['GET'])
 def get_my_tasks():
-    print("--- GET /api/me/tasks (v4 - Gộp No Due Date) ĐƯỢC GỌI ---")
+    print("--- GET /api/me/tasks (v6 - Tomorrow Group) ĐƯỢC GỌI ---")
     user_id, token_error = get_user_id_from_token()
     if token_error: return jsonify({"message": f"Lỗi xác thực: {token_error}"}), 401
 
@@ -4689,117 +4694,130 @@ def get_my_tasks():
     try:
         db = next(get_db())
         
+        # 1. Thiết lập thời gian mốc (UTC để đồng bộ)
         now = datetime.now(timezone.utc)
+        # Đưa về đầu ngày (00:00:00)
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         today_end = today_start + timedelta(days=1)
+        tomorrow_end = today_end + timedelta(days=1) # Kết thúc ngày mai
         
         all_tasks = [] 
 
-        # --- 1. Lấy BoardCard (từ Workspace) ---
-        # (SỬA LỖI) Xóa filter 'due_date != None'
-        my_cards_db = db.query(BoardCard).filter(
-            BoardCard.assignee_id == user_id
-        ).all()
-
+        # --- 2. Lấy BoardCard ---
+        my_cards_db = db.query(BoardCard).filter(BoardCard.assignee_id == user_id).all()
         for card in my_cards_db:
             workspace_name = "Workspace" 
             workspace_id = None
             is_completed = False 
             try:
+                # Logic kiểm tra trạng thái completed qua List Type
                 list_ = db.query(BoardList).filter(BoardList.list_id == card.list_id).first()
-                board_ = db.query(Board).filter(Board.board_id == list_.board_id).first()
-                workspace_ = db.query(Workspace).filter(Workspace.workspace_id == board_.workspace_id).first()
-                
-                if workspace_:
-                    workspace_name = workspace_.name
-                    workspace_id = workspace_.workspace_id
                 if list_:
-                    is_completed = (list_.list_type == 'done') 
-                    
-            except Exception:
-                pass 
+                    is_completed = (list_.list_type == 'done')
+                    board_ = db.query(Board).filter(Board.board_id == list_.board_id).first()
+                    if board_:
+                        workspace_ = db.query(Workspace).filter(Workspace.workspace_id == board_.workspace_id).first()
+                        if workspace_:
+                            workspace_name = workspace_.name
+                            workspace_id = workspace_.workspace_id
+            except Exception: pass 
 
-            # Chỉ thêm nếu chưa hoàn thành
-            if not is_completed:
-                all_tasks.append({
-                    "id": f"card-{card.card_id}", 
-                    "title": card.title,
-                    "priority": card.priority,
-                    "due_date": card.due_date.isoformat() if card.due_date else None, # (CODE MỚI) Cho phép None
-                    "workspace_name": workspace_name, 
-                    "workspace_id": workspace_id, 
-                    "type": "workspace_card",
-                    "is_completed": is_completed 
-                })
+            all_tasks.append({
+                "id": f"card-{card.card_id}", 
+                "title": card.title,
+                "priority": card.priority,
+                # Chuyển sang ISO string an toàn
+                "due_date": card.due_date.isoformat() if card.due_date else None,
+                "workspace_name": workspace_name, 
+                "workspace_id": workspace_id, 
+                "type": "workspace_card",
+                "is_completed": is_completed
+            })
 
-        # --- 2. Lấy Task (Cá nhân) ---
-        # (SỬA LỖI) Xóa filter 'deadline != None'
-        my_tasks_db = db.query(Task).filter(
-            Task.creator_id == user_id,
-            Task.status != 'done' # Chỉ lấy task chưa xong
-        ).all()
-        
+        # --- 3. Lấy Task cá nhân ---
+        my_tasks_db = db.query(Task).filter(Task.creator_id == user_id).all()
         for task in my_tasks_db:
             all_tasks.append({
                 "id": f"task-{task.task_id}", 
                 "title": task.title,
                 "priority": task.priority,
-                "due_date": task.deadline.isoformat() if task.deadline else None, # (CODE MỚI) Cho phép None
+                "due_date": task.deadline.isoformat() if task.deadline else None,
                 "workspace_name": "Việc cá nhân", 
                 "workspace_id": None, 
                 "type": "personal_task",
-                "is_completed": False # (Vì đã lọc status != 'done')
+                "is_completed": (task.status == 'done')
             })
 
-        # --- 3. Phân loại tất cả công việc ---
+        # --- 4. Phân loại (4 Nhóm) ---
         tasks_overdue = []
         tasks_today = []
-        tasks_upcoming = []
-        tasks_no_due_date = [] # <-- (CODE MỚI) Nhóm thứ tư
+        tasks_tomorrow = [] # <-- (MỚI) Nhóm ngày mai
+        tasks_upcoming = [] # Còn lại
+        tasks_no_due_date = []
         
-        today_total = 0
-        today_completed = 0
+        today_total_count = 0
+        today_completed_count = 0
         
         for task_data in all_tasks:
             due_date_str = task_data['due_date']
-            
-            # (SỬA LỖI) Logic phân loại mới
-            if due_date_str is None:
-                tasks_no_due_date.append(task_data) # 1. Không có ngày
-            else:
-                due_date = datetime.fromisoformat(due_date_str.replace('Z', '+00:00'))
-                
-                if due_date < today_start:
-                    tasks_overdue.append(task_data) # 2. Quá hạn
-                elif due_date >= today_start and due_date < today_end:
-                    tasks_today.append(task_data) # 3. Hôm nay
-                    today_total += 1 # Vẫn tính stats cho Dashboard
-                else:
-                    tasks_upcoming.append(task_data) # 4. Sắp tới
-        
-        # (Lấy các task ĐÃ HOÀN THÀNH HÔM NAY để tính stats)
-        # (Logic này cần được rà soát lại, nhưng tạm thời giữ nguyên để Dashboard không lỗi)
-        # ... (Tạm thời bỏ qua logic 'today_completed' để tập trung vào 4 nhóm)
+            is_done = task_data['is_completed']
 
-        tasks_overdue.sort(key=lambda x: x['due_date'])
-        tasks_today.sort(key=lambda x: x['due_date'])
-        tasks_upcoming.sort(key=lambda x: x['due_date'])
+            if not due_date_str:
+                if not is_done: tasks_no_due_date.append(task_data)
+                continue 
+
+            try:
+                # Xử lý chuỗi ngày tháng an toàn
+                if due_date_str.endswith('Z'):
+                    due_date_str = due_date_str.replace('Z', '+00:00')
+                
+                due_date = datetime.fromisoformat(due_date_str)
+                
+                # Nếu DB lưu ngày naive (không múi giờ), gán UTC để so sánh
+                if due_date.tzinfo is None:
+                    due_date = due_date.replace(tzinfo=timezone.utc)
+
+                # Logic phân nhóm
+                if due_date < today_start:
+                    if not is_done: tasks_overdue.append(task_data) # 1. Quá hạn
+                elif due_date >= today_start and due_date < today_end:
+                    tasks_today.append(task_data) # 2. Hôm nay (Lấy cả xong & chưa xong)
+                    today_total_count += 1
+                    if is_done: today_completed_count += 1
+                elif due_date >= today_end and due_date < tomorrow_end:
+                    if not is_done: tasks_tomorrow.append(task_data) # 3. Ngày mai (MỚI)
+                else:
+                    if not is_done: tasks_upcoming.append(task_data) # 4. Sắp tới (Sau ngày mai)
+            
+            except Exception as e:
+                print(f"⚠️ Lỗi parse ngày task {task_data['id']}: {e}")
+                if not is_done: tasks_no_due_date.append(task_data)
+
+        # Sắp xếp (Sort)
+        def sort_key(x): return x['due_date'] or "9999-12-31"
+        
+        tasks_overdue.sort(key=sort_key)
+        tasks_today.sort(key=lambda x: (x['is_completed'], x['due_date']))
+        tasks_tomorrow.sort(key=sort_key)
+        tasks_upcoming.sort(key=sort_key)
 
         return jsonify({
             "overdue": tasks_overdue,
             "today": tasks_today,
+            "tomorrow": tasks_tomorrow, # <-- Trả về nhóm mới
             "upcoming": tasks_upcoming,
-            "no_due_date": tasks_no_due_date, # <-- (CODE MỚI) Gửi nhóm mới
+            "no_due_date": tasks_no_due_date,
             "stats": {
-                "today_total": today_total,
-                "today_completed": 0 # (Tạm thời = 0, sẽ sửa sau nếu cần)
+                "today_total": today_total_count,
+                "today_completed": today_completed_count
             }
         }), 200
         
     except Exception as e:
         if db: db.rollback()
+        print(f"❌ Lỗi SERVER get_my_tasks: {str(e)}")
         traceback.print_exc()
-        return jsonify({"message": f"Lỗi server khi lấy 'My Tasks': {str(e)}"}), 500
+        return jsonify({"message": f"Lỗi server: {str(e)}"}), 500
     finally:
         if db: db.close()
         
@@ -5120,29 +5138,34 @@ def handle_member_ready(data):
              pass
          
 def seed_shop_items():
-    """Tạo các vật phẩm mẫu cho Shop nếu chưa có."""
+    """Tạo các vật phẩm mẫu cho Shop."""
     db = next(get_db())
     try:
-        if db.query(ShopItem).count() == 0:
-            items = [
-                # --- NAME COLORS ---
-                ShopItem(name="Tên Vàng Kim", type="name_color", price=50, value="#FFD700", description="Tên bạn sẽ tỏa sáng như vàng."),
-                ShopItem(name="Tên Đỏ Rực", type="name_color", price=30, value="#FF4500", description="Màu của sự nhiệt huyết."),
-                ShopItem(name="Tên Xanh Neon", type="name_color", price=40, value="#00FF7F", description="Nổi bật và hiện đại."),
-                
-                # --- TITLES ---
-                ShopItem(name="Danh hiệu: Học Bá", type="title", price=100, value="Học Bá", description="Chứng nhận chăm chỉ."),
-                ShopItem(name="Danh hiệu: Chúa tể Focus", type="title", price=200, value="Chúa tể Focus", description="Không ai tập trung bằng bạn."),
-                
-                # --- FRAMES (Giả sử dùng CSS border hoặc ảnh có sẵn) ---
-                ShopItem(name="Khung Lửa", type="frame", price=150, value="frame-fire", description="Khung avatar rực lửa."),
-                ShopItem(name="Khung Vàng", type="frame", price=150, value="frame-gold", description="Khung avatar sang chảnh.")
-            ]
-            db.add_all(items)
-            db.commit()
-            print("✅ Đã tạo dữ liệu Shop mẫu.")
+        # --- (CODE MỚI) LUÔN LUÔN XÓA CŨ NẠP MỚI ---
+        print("♻️ Đang làm mới Shop Database...")
+        db.query(ShopItem).delete() # Xóa hết cái cũ
+        db.commit()
+        # ------------------------------------------
+
+        items = [
+            # (Copy y nguyên danh sách items chuẩn ở câu trả lời trước vào đây)
+            ShopItem(name="Tên Vàng Kim", type="name_color", price=50, value="#FFD700", description="Tên tỏa sáng.", image_url=None),
+            ShopItem(name="Tên Đỏ Rực", type="name_color", price=30, value="#FF4500", description="Nhiệt huyết.", image_url=None),
+            ShopItem(name="Tên Xanh Neon", type="name_color", price=40, value="#00FF7F", description="Hiện đại.", image_url=None),
+            ShopItem(name="Danh hiệu: Học Bá", type="title", price=100, value="Học Bá", description="Chứng nhận chăm chỉ.", image_url=None),
+            ShopItem(name="Danh hiệu: Chúa tể Focus", type="title", price=200, value="Chúa tể Focus", description="Tập trung cao độ.", image_url=None),
+            
+            # KHUNG ẢNH CHUẨN
+            ShopItem(name="Khung Lửa Thiêng", type="frame", price=150, value="/frames/gold-frame.png", description="Khung rực lửa.", image_url="/frames/gold-frame.png"),
+            ShopItem(name="Khung Hoàng Kim", type="frame", price=300, value="/frames/gold-frame.png", description="Sang trọng quý phái.", image_url="/frames/gold-frame.png"),
+            ShopItem(name="Khung Băng Giá", type="frame", price=120, value="/frames/green-frame.png", description="Mát lạnh.", image_url="/frames/green-frame.png")
+        ]
+        
+        db.add_all(items)
+        db.commit()
+        print("✅ Đã nạp dữ liệu Shop thành công!")
     except Exception as e:
-        print(f"Lỗi seed shop: {e}")
+        print(f"❌ Lỗi seed shop: {e}")
     finally:
         db.close()
 
@@ -5260,41 +5283,94 @@ def equip_item():
 def seed_shop_manual():
     db = next(get_db())
     try:
-        # 1. Xóa đồ cũ (nếu muốn reset lại từ đầu thì bỏ comment dòng dưới)
-        # db.query(ShopItem).delete()
-        
-        # 2. Kiểm tra xem shop có trống không
-        if db.query(ShopItem).count() > 0:
-            return jsonify({"message": "Shop đã có đồ rồi! Không cần thêm nữa."})
+        # 1. QUAN TRỌNG: Xóa hết dữ liệu cũ bị sai
+        db.query(ShopItem).delete()
+        db.commit()
 
         items = [
-            # --- MÀU TÊN (NAME COLOR) ---
-            ShopItem(name="Tên Vàng Kim", type="name_color", price=50, value="#FFD700", description="Tên bạn sẽ tỏa sáng như vàng ròng.", image_url="https://placehold.co/100x100/FFD700/white?text=Gold"),
-            ShopItem(name="Tên Đỏ Rực", type="name_color", price=30, value="#FF4500", description="Màu của sự nhiệt huyết và năng lượng.", image_url="https://placehold.co/100x100/FF4500/white?text=Red"),
-            ShopItem(name="Tên Xanh Neon", type="name_color", price=40, value="#00FF7F", description="Nổi bật, hiện đại và cá tính.", image_url="https://placehold.co/100x100/00FF7F/white?text=Neon"),
-            ShopItem(name="Tên Tím Mộng Mơ", type="name_color", price=35, value="#9370DB", description="Nhẹ nhàng và đầy bí ẩn.", image_url="https://placehold.co/100x100/9370DB/white?text=Purple"),
+            # --- MÀU TÊN ---
+            ShopItem(name="Tên Vàng Kim", type="name_color", price=50, value="#FFD700", description="Tên tỏa sáng.", image_url=None),
+            ShopItem(name="Tên Đỏ Rực", type="name_color", price=30, value="#FF4500", description="Nhiệt huyết.", image_url=None),
+            ShopItem(name="Tên Xanh Neon", type="name_color", price=40, value="#00FF7F", description="Hiện đại.", image_url=None),
 
-            # --- DANH HIỆU (TITLE) ---
-            ShopItem(name="Danh hiệu: Học Bá", type="title", price=100, value="Học Bá", description="Chứng nhận chăm chỉ học tập.", image_url="https://placehold.co/100x100/eee/333?text=HocBa"),
-            ShopItem(name="Danh hiệu: Chúa tể Focus", type="title", price=200, value="Chúa tể Focus", description="Không ai có thể làm phiền bạn.", image_url="https://placehold.co/100x100/eee/333?text=Focus"),
-            ShopItem(name="Danh hiệu: Đại Gia Cà Chua", type="title", price=500, value="Đại Gia 🍅", description="Người giàu có nhất StudyRoom.", image_url="https://placehold.co/100x100/eee/333?text=Rich"),
+            # --- DANH HIỆU ---
+            ShopItem(name="Danh hiệu: Học Bá", type="title", price=100, value="Học Bá", description="Chứng nhận chăm chỉ.", image_url=None),
+            ShopItem(name="Danh hiệu: Chúa tể Focus", type="title", price=200, value="Chúa tể Focus", description="Tập trung cao độ.", image_url=None),
 
-            # --- KHUNG AVATAR (FRAME) ---
-            # (Lưu ý: value ở đây là mã màu border hoặc tên class CSS nếu bạn làm nâng cao)
-            ShopItem(name="Khung Lửa Thiêng", type="frame", price=150, value="#FF4500", description="Khung avatar rực lửa bao quanh.", image_url="https://placehold.co/100x100/000/FF4500?text=Fire"),
-            ShopItem(name="Khung Hoàng Kim", type="frame", price=300, value="#FFD700", description="Sang trọng và quý phái.", image_url="https://placehold.co/100x100/000/FFD700?text=Gold"),
-            ShopItem(name="Khung Băng Giá", type="frame", price=120, value="#00BFFF", description="Mát lạnh và cool ngầu.", image_url="https://placehold.co/100x100/000/00BFFF?text=Ice")
+            # --- KHUNG AVATAR (ĐƯỜNG DẪN CHUẨN) ---
+            # Đảm bảo bạn đã có file 'gold-frame.png' trong folder client/public/frames/
+            
+            ShopItem(
+                name="Khung Lửa Thiêng", 
+                type="frame", 
+                price=150, 
+                value="/frames/gold-frame.png",  # <-- Sửa thành đường dẫn file ảnh (tạm dùng chung ảnh vàng nếu chưa có ảnh lửa)
+                description="Khung rực lửa.", 
+                image_url="/frames/gold-frame.png"
+            ),
+            ShopItem(
+                name="Khung Hoàng Kim", 
+                type="frame", 
+                price=300, 
+                value="/frames/gold-frame.png",  # <-- ĐÚNG: Đường dẫn tới file trong public
+                description="Sang trọng quý phái.", 
+                image_url="/frames/gold-frame.png"
+            )
         ]
         
         db.add_all(items)
         db.commit()
-        return jsonify({"message": f"Đã thêm thành công {len(items)} vật phẩm vào Shop!"})
+        return jsonify({"message": "✅ Đã XÓA dữ liệu cũ và CẬP NHẬT đường dẫn ảnh mới!"})
 
     except Exception as e:
         db.rollback()
         return jsonify({"message": f"Lỗi: {str(e)}"}), 500
     finally:
-        db.close()           
+        db.close()
+              
+# ✅ API: Lấy Bảng Xếp Hạng (Top 10 Tomatoes)
+@app.route('/api/leaderboard', methods=['GET'])
+def get_leaderboard():
+    db = next(get_db())
+    try:
+        # 1. Lấy Top 10
+        top_users = db.query(User).order_by(desc(User.tomatoes)).limit(10).all()
+        
+        # 2. (LOGIC MỚI) Cập nhật danh hiệu Rank cho Top 3
+        # Reset danh hiệu của tất cả user trước (để người rớt top bị mất danh hiệu)
+        # Lưu ý: Cách này hơi chậm nếu user đông, tối ưu nhất là dùng Background Job.
+        # Nhưng với quy mô hiện tại thì OK.
+        db.query(User).update({User.rank_title: None})
+        
+        leaderboard_data = []
+        for index, user in enumerate(top_users):
+            # Gán danh hiệu mới
+            new_rank_title = None
+            if index == 0: new_rank_title = "Vô Địch 🥇"
+            elif index == 1: new_rank_title = "Á Quân 🥈"
+            elif index == 2: new_rank_title = "Quý Quân 🥉"
+            
+            user.rank_title = new_rank_title # Cập nhật vào DB object
+            
+            leaderboard_data.append({
+                "user_id": user.user_id,
+                "username": user.username,
+                "avatar_url": user.avatar_url,
+                "tomatoes": user.tomatoes,
+                "equipped_frame_url": user.equipped_frame_url,
+                "equipped_name_color": user.equipped_name_color,
+                "equipped_title": user.equipped_title,
+                "rank_title": new_rank_title # Trả về frontend
+            })
+        
+        db.commit() # Lưu thay đổi vào DB
+            
+        return jsonify(leaderboard_data), 200
+    except Exception as e:
+        db.rollback()
+        return jsonify({"message": f"Lỗi server: {str(e)}"}), 500
+    finally:
+        db.close()
 
 if __name__ == '__main__':
     is_main_process = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'

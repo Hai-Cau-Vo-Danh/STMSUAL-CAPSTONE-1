@@ -22,6 +22,7 @@ class User(Base):
     equipped_frame_url = Column(String(255), nullable=True) # URL khung avatar
     equipped_title = Column(String(100), nullable=True)     # Danh hiệu (VD: "Bá chủ")
     equipped_name_color = Column(String(20), nullable=True) # Mã màu tên (VD: "#FFD700")
+    rank_title = Column(String(50), nullable=True)
 
     # Relationships
     settings = relationship('UserSetting', back_populates='user', uselist=False, cascade='all, delete-orphan')

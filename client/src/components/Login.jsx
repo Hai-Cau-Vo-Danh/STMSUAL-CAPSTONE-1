@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "./auth.css"; // Dùng chung CSS
+import { useNavigate, Link } from "react-router-dom";
+import "./auth.css";
 import loginArt from "../assets/DangNhap/login-art.png";
+import { BsEnvelope, BsLock, BsArrowLeft, BsExclamationCircle } from "react-icons/bs"; // Thêm icons
 
 const Login = ({ onLoginSuccess }) => {
   const navigate = useNavigate();
@@ -22,98 +23,112 @@ const Login = ({ onLoginSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true); // <-- Bật loading ở đầu
+    setLoading(true);
     const { email, password } = formData;
 
     if (!email || !password) {
       setError("Vui lòng nhập đầy đủ thông tin!");
-      setLoading(false); // Tắt loading nếu lỗi
+      setLoading(false);
       return;
     }
 
-    if (!validateEmail(email)) { // <-- Áp dụng cho cả admin
-      setError("Email không đúng định dạng (ví dụ: example@domain.com)");
-      setLoading(false); // Tắt loading nếu lỗi
+    if (!validateEmail(email)) {
+      setError("Email không đúng định dạng!");
+      setLoading(false);
       return;
     }
 
-    // --- (ĐÃ XÓA) Toàn bộ khối "if (email === 'admin' ...)" đã bị xóa ---
-
-    // Login (gọi API cho CẢ user và admin)
     try {
       const res = await fetch("http://localhost:5000/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        // API trả về role thật (user hoặc admin)
         localStorage.setItem("role", data.user.role); 
         localStorage.setItem("user", JSON.stringify(data.user));
-        localStorage.setItem("token", data.token); // API trả về token thật
+        localStorage.setItem("token", data.token);
         onLoginSuccess();
-        // Không gọi setLoading(false) khi thành công (để App.jsx lo chuyển hướng)
       } else {
         setError(data.message || "Đã xảy ra lỗi");
-        setLoading(false); // Tắt loading nếu API lỗi
+        setLoading(false);
       }
     } catch (error) {
       console.error("Lỗi đăng nhập:", error);
       setError("Không thể kết nối đến máy chủ!");
-      setLoading(false); // Tắt loading nếu fetch lỗi
+      setLoading(false);
     } 
   };
 
   return (
     <div className="auth-container">
+      {/* Nút quay về trang chủ */}
+      <Link to="/" className="btn-back-home"><BsArrowLeft /> Trang chủ</Link>
+
       <div className="auth-box">
         <div className="auth-left">
           <img src={loginArt} alt="Login Illustration" className="auth-img" />
         </div>
 
         <div className="auth-right">
+          <div className="auth-header">
+            <h2>Chào mừng trở lại!</h2>
+            <p className="auth-subtitle">Đăng nhập để tiếp tục quản lý công việc</p>
+          </div>
+
           <form onSubmit={handleSubmit}>
-            <h2>Đăng nhập</h2>
+            {error && (
+              <div className="message-box error">
+                <BsExclamationCircle /> {error}
+              </div>
+            )}
 
-            <input
-              type="text"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="password"
-              name="password"
-              placeholder="Mật khẩu"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
+            <div className="form-group">
+              <BsEnvelope className="input-icon" />
+              <input
+                type="text"
+                name="email"
+                className="auth-input"
+                placeholder="Email của bạn"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-            {error && <p className="error">{error}</p>}
+            <div className="form-group">
+              <BsLock className="input-icon" />
+              <input
+                type="password"
+                name="password"
+                className="auth-input"
+                placeholder="Mật khẩu"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-            <button type="submit" disabled={loading}>
-              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+            <div className="auth-links" style={{marginBottom: '20px', justifyContent: 'flex-end'}}>
+               <Link to="/forgot-password" className="auth-link" style={{fontSize: '0.9rem'}}>
+                 Quên mật khẩu?
+               </Link>
+            </div>
+
+            <button type="submit" className="auth-btn" disabled={loading}>
+              {loading ? "Đang xác thực..." : "Đăng nhập ngay"}
             </button>
 
-            <div className="auth-links">
+            <div className="auth-links" style={{justifyContent: 'center'}}>
               <p>
                 Chưa có tài khoản?{" "}
-                <a href="/register" className="auth-link">
-                  Đăng ký
-                </a>
+                <Link to="/register" className="auth-link">
+                  Tạo tài khoản mới
+                </Link>
               </p>
-              <a href="/forgot-password" className="auth-link forgot-link">
-                Quên mật khẩu?
-              </a>
             </div>
           </form>
         </div>

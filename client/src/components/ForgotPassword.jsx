@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './auth.css'; // Dùng chung CSS với Login
+import { useNavigate, Link } from 'react-router-dom';
+import './auth.css'; 
 import loginArt from "../assets/DangNhap/login-art.png";
+import { BsEnvelope, BsArrowLeft, BsCheckCircle, BsExclamationCircle } from "react-icons/bs";
 
 const ForgotPassword = () => {
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -39,36 +39,52 @@ const ForgotPassword = () => {
 
   return (
     <div className="auth-container">
+      <Link to="/login" className="btn-back-home"><BsArrowLeft /> Quay lại</Link>
+
       <div className="auth-box">
         <div className="auth-left">
-          <img src={loginArt} alt="Forgot Password Illustration" className="auth-img" />
+          <img src={loginArt} alt="Forgot Password" className="auth-img" />
         </div>
         <div className="auth-right">
+          <div className="auth-header">
+            <h2>Quên mật khẩu?</h2>
+            <p className="auth-subtitle">Đừng lo, chúng tôi sẽ gửi link đặt lại cho bạn.</p>
+          </div>
+
           <form onSubmit={handleSubmit}>
-            <h2>Quên mật khẩu</h2>
-            <p className="auth-subtitle">Nhập email của bạn, chúng tôi sẽ gửi link đặt lại mật khẩu.</p>
+            {message && (
+               <div className="message-box success">
+                 <BsCheckCircle /> {message}
+               </div>
+            )}
+            {error && (
+               <div className="message-box error">
+                 <BsExclamationCircle /> {error}
+               </div>
+            )}
             
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <div className="form-group">
+              <BsEnvelope className="input-icon" />
+              <input
+                type="email"
+                name="email"
+                className="auth-input"
+                placeholder="Nhập email của bạn"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
 
-            {message && <p className="success-message">{message}</p>}
-            {error && <p className="error">{error}</p>}
-
-            <button type="submit" disabled={loading}>
-              {loading ? "Đang gửi..." : "Gửi link"}
+            <button type="submit" className="auth-btn" disabled={loading}>
+              {loading ? "Đang gửi..." : "Gửi link khôi phục"}
             </button>
-            <p>
-              Nhớ mật khẩu?{" "}
-              <a href="/login" className="auth-link">
-                Đăng nhập
-              </a>
-            </p>
+            
+            <div className="auth-links" style={{ justifyContent: "center" }}>
+              <Link to="/login" className="auth-link">
+                Quay lại đăng nhập
+              </Link>
+            </div>
           </form>
         </div>
       </div>

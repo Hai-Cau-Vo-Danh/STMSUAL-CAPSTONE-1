@@ -1,0 +1,60 @@
+.leaderboard-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 2000; backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.leaderboard-content {
+  background: white; width: 90%; max-width: 500px;
+  border-radius: 20px; overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  display: flex; flex-direction: column;
+  max-height: 80vh;
+}
+
+.leaderboard-header {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  padding: 20px; color: white;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.leaderboard-header h2 { margin: 0; display: flex; align-items: center; gap: 10px; }
+.trophy-icon-header { font-size: 1.5em; }
+
+.leaderboard-body { padding: 20px; overflow-y: auto; background: #f9f9f9; }
+
+.leader-item {
+  display: flex; align-items: center;
+  background: white; padding: 12px;
+  border-radius: 12px; margin-bottom: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: transform 0.2s;
+}
+.leader-item:hover { transform: scale(1.02); }
+
+/* Top 3 Highlighting */
+.rank-1 { border: 2px solid #FFD700; background: #fffdf0; }
+.rank-2 { border: 2px solid #C0C0C0; }
+.rank-3 { border: 2px solid #CD7F32; }
+
+.leader-rank { font-size: 1.5rem; width: 40px; text-align: center; margin-right: 10px; font-weight: bold; }
+.rank-number { font-size: 1rem; color: #666; }
+
+.leader-avatar-wrapper {
+  width: 50px; height: 50px; margin-right: 15px; position: relative;
+}
+.leader-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.leader-frame {
+  position: absolute; top: -10%; left: -10%; width: 120%; height: 120%; object-fit: contain;
+}
+
+.leader-info { flex: 1; }
+.leader-name { font-weight: 700; font-size: 1rem; display: flex; flex-direction: column; align-items: start; }
+
+.leader-title-badge {
+  font-size: 0.6em; background: #eee; color: #555; padding: 2px 6px;
+  border-radius: 10px; margin-top: 2px; font-weight: normal;
+}
+
+.leader-score { font-weight: 800; color: #FF6347; font-size: 1.1rem; }

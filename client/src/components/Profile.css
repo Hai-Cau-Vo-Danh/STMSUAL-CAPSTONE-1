@@ -1,4 +1,5 @@
-/* Biến CSS (Tóm tắt từ index.css của bạn)
+/* Biến CSS (Tóm tắt từ index.css của bạn) */
+/*
 :root {
   --bg-color: #f8f9fa;
   --bg-secondary-color: #ffffff;
@@ -13,14 +14,12 @@
 }
 */
 
-/* (ĐÃ XÓA) Toàn bộ CSS cho .profile-layout-root và .profile-page-header đã bị xóa */
-
 .profile-page-container {
   padding: 20px 5%;
   background-color: var(--bg-secondary-color);
-  min-height: calc(100vh - 60px); /* Điều chỉnh nếu có Header/Footer cố định */
+  min-height: calc(100vh - 60px);
   color: var(--text-color);
-  max-width: 1400px; /* Giới hạn chiều rộng tổng thể */
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -35,7 +34,7 @@
 }
 
 .profile-cover-image {
-  height: 250px; /* Chiều cao ảnh bìa */
+  height: 250px;
   width: 100%;
 }
 
@@ -47,36 +46,96 @@
 
 .profile-user-details-bar {
   display: flex;
-  align-items: flex-end; /* Căn dưới cho các item */
+  align-items: flex-end;
   padding: 0 30px 20px 30px;
   position: relative;
-  top: -80px; /* Kéo lên trên ảnh bìa */
+  top: -80px;
   left: 0;
   right: 0;
-  z-index: 1; /* Đảm bảo avatar nằm trên ảnh bìa */
+  z-index: 1;
 }
 
+/* ===== (CODE ĐÃ SỬA) CSS CHO AVATAR VÀ KHUNG ===== */
 .profile-avatar-wrapper {
-  width: 160px; /* Kích thước avatar */
+  width: 160px; 
   height: 160px;
-  border-radius: 50%;
-  border: 5px solid var(--bg-color); /* Viền màu nền */
-  background-color: var(--bg-color);
-  overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  
+  /* QUAN TRỌNG: Cho phép nội dung tràn ra ngoài để khung không bị cắt */
+  overflow: visible !important; 
+  
+  position: relative;
   margin-right: 20px;
-  flex-shrink: 0; /* Không cho avatar bị co lại */
+  flex-shrink: 0;
+  cursor: pointer;
+  
+  /* Bo tròn wrapper để overlay cũng tròn theo */
+  border-radius: 50%; 
 }
 
 .profile-avatar {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  
+  /* Bo tròn ảnh avatar */
+  border-radius: 50%; 
+  
+  /* Tạo viền trắng tách biệt avatar với khung */
+  border: 5px solid var(--bg-color); 
+  
+  background-color: var(--bg-color);
+  position: relative;
+  z-index: 1; /* Nằm dưới khung */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
+
+.profile-avatar-frame {
+  position: absolute;
+  
+  /* Căn chỉnh khung để bao trùm avatar và viền trắng */
+  top: -12%;  /* Mở rộng lên trên */
+  left: -12%; /* Mở rộng sang trái */
+  width: 124%; /* Mở rộng chiều ngang */
+  height: 124%; /* Mở rộng chiều dọc */
+  
+  object-fit: contain; 
+  
+  /* QUAN TRỌNG: Ép khung hình phải bo tròn */
+  border-radius: 50%; 
+  
+  z-index: 10; /* Luôn nằm trên cùng */
+  pointer-events: none; /* Click xuyên qua */
+}
+
+.avatar-upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2; /* Nằm trên ảnh mèo nhưng dưới khung */
+}
+
+.profile-avatar-wrapper:hover .avatar-upload-overlay {
+  opacity: 1;
+}
+
+.avatar-upload-icon {
+  font-size: 32px;
+  color: #ffffff;
+}
+/* ===== KẾT THÚC CODE SỬA ===== */
 
 .profile-user-info-text {
   flex-grow: 1;
-  padding-bottom: 10px; /* Để căn chỉnh với tên người dùng trên ảnh mẫu */
+  padding-bottom: 10px;
 }
 
 .profile-username {
@@ -96,15 +155,28 @@
   margin: 0 5px;
 }
 
-/* (ĐÃ XÓA) CSS cho .profile-view-posts-link đã bị xóa */
+/* ===== DANH HIỆU (TITLE BADGE) ===== */
+.profile-title-badge {
+  display: inline-block;
+  font-size: 0.5em;
+  vertical-align: middle;
+  margin-left: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #FFD700, #FFA500);
+  color: white;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  transform: translateY(-4px);
+  border: 1px solid rgba(255,255,255,0.3);
+}
 
-
-/* ===== (CODE MỚI) NÚT ĐIỀU HƯỚNG MỚI ===== */
+/* ===== NÚT ĐIỀU HƯỚNG ===== */
 .profile-header-buttons {
   display: flex;
   gap: 12px;
   flex-shrink: 0;
-  padding-bottom: 10px; /* Căn lề giống .profile-user-info-text */
+  padding-bottom: 10px;
 }
 
 .profile-nav-btn {
@@ -131,7 +203,6 @@
   box-shadow: 0 4px 10px var(--shadow-color);
 }
 
-/* Nút "Tạo tin đăng" nổi bật hơn */
 .profile-nav-btn.primary {
   background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
   color: #fff;
@@ -142,11 +213,6 @@
   color: #fff;
   opacity: 0.9;
 }
-/* ===== KẾT THÚC CODE MỚI ===== */
-
-
-/* (ĐÃ XÓA) Toàn bộ CSS cho .profile-modules-section đã bị xóa */
-
 
 /* ===== THÔNG TIN CƠ BẢN VÀ CÀI ĐẶT TÀI KHOẢN ===== */
 .profile-content-section {
@@ -155,7 +221,7 @@
 }
 
 .profile-info-column {
-  flex: 1; /* Chiếm 1 phần */
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -173,7 +239,7 @@
 
 .info-icon {
   font-size: 20px;
-  color: var(--primary-color); /* Màu icon */
+  color: var(--primary-color);
   flex-shrink: 0;
 }
 
@@ -195,7 +261,7 @@
 }
 
 .profile-settings-column {
-  flex: 1.5; /* Chiếm 1.5 phần, rộng hơn cột thông tin */
+  flex: 1.5;
   background-color: var(--bg-color);
   border-radius: var(--border-radius-main);
   box-shadow: 0 4px 12px var(--shadow-color);
@@ -230,13 +296,13 @@
   background-color: var(--bg-secondary-color);
   color: var(--text-color);
   transition: border-color 0.3s ease;
-  box-sizing: border-box; /* Thêm để padding không làm vỡ layout */
+  box-sizing: border-box;
 }
 
 .setting-item input[type="text"]:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb, 102, 126, 234), 0.2); /* Sử dụng biến màu RGB */
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb, 102, 126, 234), 0.2);
 }
 
 .save-changes-btn {
@@ -270,7 +336,7 @@
 }
 
 .floating-buttons button {
-  width: 60px; /* Kích thước nút */
+  width: 60px;
   height: 60px;
   border-radius: 50%;
   border: none;
@@ -291,11 +357,11 @@
 }
 
 .help-button {
-  background-color: #667eea; /* Màu xanh tím */
+  background-color: #667eea;
 }
 
 .chat-button {
-  background-color: #f53838; /* Màu đỏ */
+  background-color: #f53838;
 }
 
 
@@ -304,12 +370,9 @@
   .profile-page-container {
     padding: 20px 3%;
   }
-  /* (ĐÃ XÓA) CSS Responsive cho header */
 }
 
 @media (max-width: 992px) {
-  /* (ĐÃ XÓA) CSS Responsive cho header */
-  
   .profile-header-section {
     margin-bottom: 15px;
   }
@@ -333,19 +396,17 @@
     font-size: 14px;
   }
 
-  /* (CODE MỚI) Style cho các nút trên mobile */
   .profile-header-buttons {
     padding-bottom: 0;
     margin-top: 10px;
-    flex-direction: column; /* Xếp chồng các nút */
+    flex-direction: column;
     width: 100%;
-    max-width: 300px; /* Giới hạn chiều rộng nút */
+    max-width: 300px;
   }
   .profile-nav-btn {
     width: 100%;
-    justify-content: center; /* Căn giữa text trong nút */
+    justify-content: center;
   }
-  /* (ĐÃ XÓA) CSS Responsive cho module */
 
   .profile-content-section {
     flex-direction: column;
@@ -357,8 +418,6 @@
 }
 
 @media (max-width: 576px) {
-  /* (ĐÃ XÓA) CSS Responsive cho header */
-
   .profile-page-container {
     padding: 10px;
   }
@@ -375,8 +434,6 @@
   .profile-member-status {
     font-size: 13px;
   }
-
-  /* (ĐÃ XÓA) CSS Responsive cho module */
 
   .info-card {
     padding: 15px;
@@ -415,80 +472,4 @@
     height: 50px;
     font-size: 12px;
   }
-}
-/* (Thêm vào cuối file Profile.css) */
-
-/* ===== (CODE MỚI) CSS CHO UPLOAD AVATAR ===== */
-.profile-avatar-wrapper {
-  position: relative; /* Cần để định vị lớp phủ */
-  cursor: pointer;
-}
-
-.avatar-upload-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.5); /* Màu nền mờ */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0; /* Ẩn đi mặc định */
-  transition: opacity 0.3s ease;
-  z-index: 2;
-}
-
-.profile-avatar-wrapper:hover .avatar-upload-overlay {
-  opacity: 1; /* Hiện lên khi hover */
-}
-
-.avatar-upload-icon {
-  font-size: 32px;
-  color: #ffffff;
-}
-.profile-avatar-frame {
-  position: absolute;
-  top: -10%; /* Mở rộng ra ngoài avatar một chút */
-  left: -10%;
-  width: 120%;
-  height: 120%;
-  object-fit: contain; /* Đảm bảo khung không bị méo */
-  z-index: 3; /* Nằm trên cả avatar và lớp overlay upload */
-  pointer-events: none; /* Để vẫn click được vào avatar bên dưới để upload */
-}
-
-/* 2. Danh hiệu (Title Badge) */
-.profile-title-badge {
-  display: inline-block;
-  font-size: 0.5em; /* Nhỏ bằng một nửa tên chính */
-  vertical-align: middle;
-  margin-left: 12px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  background: linear-gradient(90deg, #FFD700, #FFA500); /* Mặc định màu vàng kim */
-  color: white;
-  text-shadow: 0 1px 1px rgba(0,0,0,0.2);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-  transform: translateY(-4px); /* Căn chỉnh cho đẹp mắt với text lớn */
-  border: 1px solid rgba(255,255,255,0.3);
-}
-
-/* Chỉnh sửa lại wrapper để chứa được khung avatar tràn ra ngoài */
-.profile-avatar-wrapper {
-  overflow: visible; /* QUAN TRỌNG: Để khung avatar lòi ra ngoài vòng tròn */
-}
-
-/* Đảm bảo ảnh avatar gốc vẫn tròn */
-.profile-avatar {
-  border-radius: 50%; 
-  position: relative;
-  z-index: 1;
-}
-
-/* Lớp phủ upload nằm đè lên avatar nhưng dưới khung */
-.avatar-upload-overlay {
-  border-radius: 50%; 
-  z-index: 2;
 }

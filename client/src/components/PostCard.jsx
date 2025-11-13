@@ -102,7 +102,41 @@ const PostCard = ({ post, token, onReactionUpdate, onOpenCommentModal, onOpenRep
       <div className="post-header">
         <img src={authorAvatar} alt="Author Avatar" className="post-author-avatar" />
         <div className="post-author-info">
-          <span className="post-author-name">{post.author.username}</span>
+          {/* --- (CODE SỬA) Hiển thị tên màu và danh hiệu --- */}
+          <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+            <span 
+              className="post-author-name" 
+              style={{ color: post.author.equipped_name_color || 'var(--text-color)' }}
+            >
+              {post.author.username}
+            </span>
+            
+            {/* Hiển thị Rank Title (Vô Địch/Á Quân...) */}
+            {post.author.rank_title && (
+              <span className={`rank-badge ${
+                  post.author.rank_title.includes('Vô Địch') ? 'top-1' : 
+                  post.author.rank_title.includes('Á Quân') ? 'top-2' : 'top-3'
+              }`} style={{fontSize: '0.6em', padding: '2px 6px', borderRadius: '8px', color: 'white', fontWeight: 'bold', background: post.author.rank_title.includes('Vô Địch') ? '#FFD700' : '#C0C0C0'}}>
+                  {post.author.rank_title}
+              </span>
+            )}
+
+            {/* Hiển thị Title (Học Bá...) */}
+            {post.author.equipped_title && (
+              <span style={{
+                fontSize: '0.7em',
+                background: 'linear-gradient(90deg, #FFD700, #FFA500)',
+                color: 'white',
+                padding: '1px 6px',
+                borderRadius: '10px',
+                fontWeight: 'normal'
+              }}>
+                {post.author.equipped_title}
+              </span>
+            )}
+          </div>
+          {/* --- KẾT THÚC SỬA --- */}
+          
           <span className="post-time">{postTime}</span>
         </div>
         {/* --- (CODE MỚI) Nút Báo cáo --- */}

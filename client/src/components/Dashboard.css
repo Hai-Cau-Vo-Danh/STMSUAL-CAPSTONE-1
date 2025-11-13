@@ -1,905 +1,353 @@
-.dashboard {
-  /* Padding được xử lý bởi .content-area trong App.css */
-  /* padding: 32px; */
-  /* background-color: var(--bg-color); */ /* Nền được xử lý bởi .content-area */
-  min-height: 100%; /* Chiếm hết chiều cao của content-area */
-  /* max-width: 1400px; */ /* Bỏ max-width để full */
-  margin: 0 auto;
-  /* transition: background-color 0.3s ease; */ /* Bỏ transition */
+/* =========================================
+   DASHBOARD MODERN THEME (Bento Grid)
+   ========================================= */
+:root {
+  --dash-bg: #f8fafc;
+  --dash-card-bg: #ffffff;
+  --dash-text: #1e293b;
+  --dash-text-light: #64748b;
+  --dash-primary: #6366f1;
+  --dash-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  --dash-radius: 20px;
 }
 
-/* Header Section */
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
-  padding: 24px;
-  background: var(--bg-secondary-color); /* Use secondary background */
-  border-radius: 16px;
-  box-shadow: 0 4px 12px var(--shadow-color); /* Use shadow variable */
-  border: 1px solid var(--border-color); /* Use border variable */
-  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* Add transitions */
+body.dark {
+  --dash-bg: #0f172a;
+  --dash-card-bg: #1e293b;
+  --dash-text: #f8fafc;
+  --dash-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
-.welcome-section {
-  flex: 1;
+.dashboard-modern {
+  padding: 20px 40px;
+  min-height: 100vh;
+  background-color: var(--dash-bg);
+  font-family: 'Inter', sans-serif;
 }
 
-.welcome-title {
-  font-size: 28px;
-  font-weight: 700;
-  /* Keep gradient using variables */
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0 0 8px 0;
+/* --- 1. HEADER BANNER --- */
+.modern-header {
+  margin-bottom: 30px;
 }
 
-.welcome-subtitle {
-  font-size: 16px;
-  color: var(--text-secondary-color); /* Use secondary text color */
-  margin: 0;
-  font-weight: 500;
-  transition: color 0.3s ease; /* Add transition */
+.header-content {
+  display: flex; justify-content: space-between; align-items: flex-end;
 }
 
-.date-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
-  /* Use subtle background or border instead of gradient */
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  color: var(--primary-color); /* Use primary color */
-  font-weight: 600;
-  font-size: 14px;
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; /* Add transitions */
+.greeting-text {
+  font-size: 2rem; font-weight: 800; color: var(--dash-text); margin: 0 0 10px 0;
+  letter-spacing: -0.5px;
 }
 
-.calendar-icon {
-  font-size: 18px;
-  /* Color inherited */
+.user-badges { display: flex; gap: 10px; }
+.rank-tag, .date-tag {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 30px;
+  font-size: 0.85rem; font-weight: 600;
+}
+.rank-tag { background: linear-gradient(135deg, #fbbf24, #d97706); color: white; box-shadow: 0 2px 10px rgba(251, 191, 36, 0.3); }
+.date-tag { background: rgba(99, 102, 241, 0.1); color: var(--dash-primary); }
+
+.header-actions { display: flex; gap: 15px; align-items: center; }
+
+.tomato-wallet {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  padding: 8px 16px; border-radius: 30px; color: white;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); font-weight: 700;
 }
 
-/* Stats Grid */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); /* Giảm minmax */
-  gap: 24px; /* Tăng gap */
-  margin-bottom: 32px;
-}
-
-.stat-card {
-  background: var(--bg-secondary-color); /* Use secondary background */
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px var(--shadow-color); /* Use shadow variable */
-  border: 1px solid var(--border-color); /* Use border variable */
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Keep top border effect using variables */
-.stat-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-  transform: scaleX(0);
-  transform-origin: left; /* Animate from left */
-  transition: transform 0.3s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-5px); /* Tăng hiệu ứng nâng */
-  box-shadow: 0 10px 25px var(--shadow-color); /* Tăng đổ bóng khi hover */
-  border-color: var(--primary-color); /* Use primary color */
-}
-
-.stat-card:hover::before {
-  transform: scaleX(1);
-}
-
-.stat-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  transition: all 0.3s ease;
-  /* Semantic colors - keep these */
-}
-.tasks-icon { background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%); color: #0284c7; }
-.streak-icon { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #ef4444; }
-.pomodoro-icon { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #f59e0b; }
-.goal-icon { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #10b981; }
-
-
-.stat-card:hover .stat-icon {
-  transform: scale(1.1) rotate(5deg);
-}
-
-.stat-label {
-  font-size: 13px; /* Nhỏ hơn chút */
-  color: var(--text-secondary-color); /* Đổi sang màu phụ */
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: color 0.3s ease; /* Add transition */
-}
-
-.stat-content {
-  display: flex;
-  flex-direction: column;
-  gap: 10px; /* Giảm gap */
-}
-
-.stat-value {
-  font-size: 30px; /* Nhỏ hơn chút */
-  font-weight: 700;
-  color: var(--text-color); /* Use text color */
-  line-height: 1;
-  transition: color 0.3s ease; /* Add transition */
-}
-
-.stat-subtitle {
-  font-size: 13px;
-  color: var(--text-secondary-color); /* Use secondary text color */
-  font-weight: 500;
-  transition: color 0.3s ease; /* Add transition */
-}
-
-/* Progress Bar */
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background: var(--bg-color); /* Use main background */
-  border-radius: 10px;
-  overflow: hidden;
-  transition: background-color 0.3s ease; /* Add transition */
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 10px;
-  transition: width 0.5s ease;
-  position: relative;
-}
-
-/* Shimmer effect - Có thể bỏ nếu muốn đơn giản */
-.progress-fill::after {
-  content: "";
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  animation: shimmer 2s infinite;
-}
-body.dark .progress-fill::after { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent); }
-@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-
-/* Semantic colors - keep these */
-.tasks-progress { background: linear-gradient(90deg, #38bdf8, #0ea5e9); } /* Sáng hơn */
-.goal-progress { background: linear-gradient(90deg, #34d399, #10b981); } /* Sáng hơn */
-
-/* Streak Indicator */
-.streak-indicator { display: flex; gap: 6px; align-items: center; } /* Giảm gap */
-
-.streak-day {
-  width: 28px; /* Nhỏ hơn */
-  height: 28px;
-  border-radius: 6px; /* Ít bo hơn */
-  background: var(--bg-color); /* Use main background */
-  transition: all 0.3s ease;
-}
-/* Semantic color - keep this */
-.streak-day.active {
-  background: linear-gradient(135deg, #f87171, #ef4444); /* Sáng hơn */
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-  animation: fireGlow 1.5s infinite alternate; /* Nhanh hơn */
-}
-
-@keyframes fireGlow { 0% { transform: scale(1); box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);} 100% { transform: scale(1.05); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); } } /* Giảm scale, giảm shadow */
-
-/* Pomodoro Time */
-.pomodoro-time {
-  display: flex; align-items: center; gap: 8px; padding: 6px 10px; /* Giảm padding */
-  /* Semantic color - keep this */
-  background: linear-gradient(135deg, #fef9c3, #fef08a); /* Sáng hơn */
-  border: 1px solid #facc15; /* Thêm border vàng */
-  border-radius: 8px; width: fit-content;
-}
-.flash-icon { color: #f59e0b; font-size: 14px; } /* Nhỏ hơn */
-.pomodoro-time span { color: #a16207; font-weight: 600; font-size: 12px; } /* Đậm hơn */
-
-/* Content Grid */
-.content-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr; /* Tỷ lệ cũ */
-  gap: 24px; /* Tăng gap */
-  margin-bottom: 32px;
-}
-
-.content-card {
-  background: var(--bg-secondary-color); /* Use secondary background */
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px var(--shadow-color); /* Use shadow variable */
-  border: 1px solid var(--border-color); /* Use border variable */
-  transition: all 0.3s ease;
-}
-
-.content-card:hover {
-  box-shadow: 0 8px 20px var(--shadow-color); /* Use shadow variable */
-  border-color: var(--primary-color); /* Use primary color */
-}
-
-.card-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 20px; padding-bottom: 16px;
-  border-bottom: 1px solid var(--border-color); /* Giảm độ dày border */
-  transition: border-color 0.3s ease; /* Add transition */
-}
-
-.card-title {
-  font-size: 18px; font-weight: 600; /* Giảm độ đậm */
-  color: var(--text-color); /* Use text color */
-  margin: 0; display: flex; align-items: center; gap: 10px;
-  transition: color 0.3s ease; /* Add transition */
-}
-
-.title-icon {
-  color: var(--primary-color); /* Use primary color */
-  font-size: 20px;
-  transition: color 0.3s ease; /* Add transition */
-}
-
-.view-all-btn {
-  background: none; border: none;
-  color: var(--primary-color); /* Use primary color */
-  font-size: 13px; font-weight: 600; cursor: pointer;
-  padding: 6px 12px; border-radius: 8px; transition: all 0.3s ease;
-}
-
-.view-all-btn:hover {
-  background-color: var(--bg-color); /* Use main background on hover */
-  color: var(--secondary-color); /* Use secondary color */
-  /* transform: translateX(4px); */ /* Bỏ transform */
-}
-
-/* Tasks List */
-.tasks-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
-
-.task-item {
-  display: flex; align-items: center; gap: 12px; padding: 14px;
-  background: var(--bg-color); /* Use main background */
-  border-radius: 12px;
-  border: 1px solid var(--border-color); /* Use border variable */
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.task-item:hover {
-  background-color: var(--bg-secondary-color); /* Use secondary background */
-  border-color: var(--primary-color); /* Use primary color */
-  /* transform: translateX(4px); */ /* Bỏ transform */
-  box-shadow: 0 2px 8px var(--shadow-color); /* Thêm shadow nhẹ */
-}
-
-.task-checkbox {
-  font-size: 20px;
-  color: var(--text-secondary-color); /* Use secondary text color */
-  transition: all 0.3s;
-  cursor: pointer; /* Thêm cursor */
-}
-
-.task-item:hover .task-checkbox {
-  color: var(--primary-color); /* Use primary color */
-  transform: scale(1.1);
-}
-
-.checkbox-checked { color: #10b981; } /* Semantic green */
-
-.task-info { flex: 1; }
-
-.task-title {
-  font-size: 14px; font-weight: 500; /* Giảm độ đậm */
-  color: var(--text-color); /* Use text color */
-  margin: 0 0 6px 0; /* Giảm margin */
-  transition: color 0.3s ease; /* Add transition */
-}
-.task-item:hover .task-title {
-    color: var(--primary-color); /* Đổi màu title khi hover */
-}
-
-
-.task-meta { display: flex; align-items: center; gap: 10px; /* Giảm gap */ }
-
-/* Semantic priority colors */
-.task-priority { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; color: white; text-transform: uppercase; line-height: 1.2;} /* Nhỏ hơn, thêm line-height */
-
-.task-deadline {
-  display: flex; align-items: center; gap: 4px; font-size: 12px;
-  color: var(--text-secondary-color); /* Use secondary text color */
-  font-weight: 500;
-  transition: color 0.3s ease; /* Add transition */
-}
-.task-deadline svg { color: currentColor; font-size: 14px; } /* Tăng size icon */
-
-
-.add-task-btn {
-  width: 100%; padding: 12px;
-  background-color: transparent; /* Nền trong suốt */
-  border: 1px dashed var(--border-color); /* Border nét đứt, màu viền */
-  border-radius: 10px;
-  color: var(--text-secondary-color); /* Màu chữ phụ */
-  font-weight: 500; /* Giảm độ đậm */
-  cursor: pointer; transition: all 0.3s ease;
-  display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px;
-}
-
-.add-task-btn:hover {
-  background-color: var(--bg-color); /* Nền chính khi hover */
-  border-color: var(--primary-color); /* Border màu chính */
-  border-style: solid;
-  color: var(--primary-color); /* Chữ màu chính */
-  /* transform: scale(1.02); */ /* Bỏ scale */
-}
-
-.add-task-btn .plus-icon { font-size: 18px; color: currentColor; } /* Nhỏ hơn */
-
-.delete-task-btn {
-  background: none; border: none;
-  color: var(--text-secondary-color); /* Use secondary text color */
-  cursor: pointer; padding: 6px; /* Giảm padding */
-  border-radius: 50%; /* Bo tròn */
-  transition: all 0.3s ease;
+.icon-btn-glass {
+  width: 44px; height: 44px; border-radius: 50%; border: none;
+  background: var(--dash-card-bg); color: var(--dash-text);
+  font-size: 1.2rem; cursor: pointer; transition: 0.2s;
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px; /* Nhỏ hơn */
-  opacity: 0; /* Ẩn ban đầu */
+  box-shadow: var(--dash-shadow);
 }
-.task-item:hover .delete-task-btn {
-    opacity: 1; /* Hiện khi hover task-item */
-}
+.icon-btn-glass:hover { transform: translateY(-3px); color: var(--dash-primary); }
 
-
-.delete-task-btn:hover {
-  background: #fee2e2; /* Keep semantic light red */
-  color: #ef4444; /* Keep semantic red */
-  transform: scale(1.1);
+/* --- 2. BENTO GRID LAYOUT --- */
+.bento-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr 320px; /* 3 Cột: Trái nhỏ, Giữa chính, Phải widget */
+  gap: 24px;
+  align-items: start;
 }
 
-.empty-tasks {
-  text-align: center; padding: 32px;
-  color: var(--text-secondary-color); /* Use secondary text color */
-  transition: color 0.3s ease; /* Add transition */
+.bento-col { display: flex; flex-direction: column; gap: 24px; }
+
+/* Card Base */
+.bento-card {
+  background: var(--dash-card-bg);
+  border-radius: var(--dash-radius);
+  padding: 24px;
+  box-shadow: var(--dash-shadow);
+  transition: 0.3s;
+  border: 1px solid rgba(0,0,0,0.03);
+}
+.bento-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+
+/* --- LEFT COL --- */
+.progress-circle-container { text-align: center; margin-top: 15px; }
+.big-stat { font-size: 3rem; font-weight: 800; color: var(--dash-primary); line-height: 1; }
+.stat-desc { font-size: 0.9rem; color: var(--dash-text-light); margin-bottom: 15px; }
+.progress-bar-modern {
+  height: 8px; width: 100%; background: #e2e8f0; border-radius: 10px; overflow: hidden;
+}
+.progress-bar-modern .fill {
+  height: 100%; background: var(--dash-primary); border-radius: 10px; transition: width 0.5s ease;
 }
 
-.empty-tasks p { margin: 0; font-size: 14px; font-weight: 500; }
+.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+.quick-item {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 15px; border-radius: 16px; border: none; cursor: pointer;
+  background: #f1f5f9; color: var(--dash-text); font-weight: 600; font-size: 0.85rem;
+  transition: 0.2s;
+}
+.quick-item:hover { background: #e2e8f0; }
+.quick-item .q-icon { font-size: 1.5rem; }
+.quick-item.pomodoro { color: #f59e0b; }
+.quick-item.task { color: #3b82f6; }
+.quick-item.ai { color: #8b5cf6; }
+.quick-item.shop { color: #ef4444; }
 
-/* Activities List */
-.activities-list { display: flex; flex-direction: column; gap: 12px; /* Giảm gap */ }
+/* --- CENTER COL (TASKS) --- */
+.card-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.card-header-flex h3 { font-size: 1.2rem; margin: 0; display: flex; align-items: center; gap: 10px; }
+.text-btn { background: none; border: none; color: var(--dash-primary); font-weight: 600; cursor: pointer; }
 
-.activity-item {
-  display: flex; align-items: start; gap: 12px; padding: 12px;
-  background: var(--bg-color); /* Use main background */
-  border-radius: 10px;
-  border-left: 3px solid var(--primary-color); /* Use primary color */
-  transition: all 0.3s ease;
+.modern-task-list { display: flex; flex-direction: column; gap: 12px; }
+.task-item {
+  display: flex; align-items: center; gap: 15px; padding: 16px;
+  background: #f8fafc; border-radius: 16px; cursor: pointer; transition: 0.2s;
+  border: 1px solid transparent;
+}
+.task-item:hover { background: white; border-color: var(--dash-primary); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.task-checkbox { font-size: 1.2rem; color: #cbd5e1; transition: 0.2s; }
+.task-item:hover .task-checkbox { color: var(--dash-primary); }
+.task-title { font-weight: 600; color: var(--dash-text); margin: 0; font-size: 1rem; }
+.task-meta { display: flex; gap: 10px; margin-top: 5px; font-size: 0.85rem; color: var(--dash-text-light); }
+.task-badge { 
+  padding: 2px 8px; border-radius: 6px; color: white; font-size: 0.7rem; text-transform: uppercase; 
+  background-color: var(--badge-color);
 }
 
-.activity-item:hover {
-  background-color: var(--bg-secondary-color); /* Use secondary background */
-  /* transform: translateX(4px); */ /* Bỏ transform */
-  box-shadow: 0 2px 8px var(--shadow-color); /* Thêm shadow nhẹ */
+.empty-state { text-align: center; padding: 40px 0; }
+.empty-img { width: 120px; opacity: 0.6; margin-bottom: 15px; }
+.btn-primary-sm { background: var(--dash-primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+
+/* --- RIGHT COL (CHECK IN) --- */
+.card-header-simple { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-weight: 700; color: var(--dash-text-light); font-size: 0.9rem; text-transform: uppercase; }
+.icon-wrapper { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.icon-wrapper.check-in { background: #eff6ff; color: #3b82f6; }
+
+.week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px; }
+.day-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 8px 4px; border-radius: 10px; background: #f8fafc; transition: 0.2s;
 }
+.day-cell.checked { background: #dcfce7; color: #15803d; }
+.day-cell.today { border: 2px solid var(--dash-primary); background: #eef2ff; }
+.day-name { font-size: 0.75rem; font-weight: 600; }
+.day-status { font-size: 1rem; height: 16px; }
+.pulse-dot { width: 8px; height: 8px; background: var(--dash-primary); border-radius: 50%; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0% {box-shadow: 0 0 0 0 rgba(99,102,241,0.4);} 70% {box-shadow: 0 0 0 6px rgba(99,102,241,0);} 100% {box-shadow: 0 0 0 0 rgba(99,102,241,0);} }
 
-.activity-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; } /* Nhỏ hơn, căn chỉnh */
-
-.activity-info { flex: 1; }
-
-.activity-text {
-  font-size: 14px; font-weight: 500; /* Giảm độ đậm */
-  color: var(--text-color); /* Use text color */
-  margin: 0 0 4px 0;
-  transition: color 0.3s ease; /* Add transition */
+.btn-glass {
+  width: 100%; padding: 12px; border: none; border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; font-weight: 600;
+  cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(99,102,241,0.3);
 }
+.btn-glass:hover { transform: scale(1.02); }
+.btn-glass.disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
 
-.activity-time {
-  font-size: 11px; /* Nhỏ hơn */
-  color: var(--text-secondary-color); /* Use secondary text color */
-  font-weight: 500;
-  transition: color 0.3s ease; /* Add transition */
+.promo-card {
+  background: linear-gradient(135deg, #1e293b, #0f172a); color: white;
 }
+.promo-content { display: flex; gap: 15px; align-items: center; }
+.promo-icon { font-size: 2rem; color: #fbbf24; }
 
-/* Quick Actions */
-.quick-actions {
-  background: var(--bg-secondary-color); /* Use secondary background */
-  padding: 24px; border-radius: 16px;
-  box-shadow: 0 4px 12px var(--shadow-color); /* Use shadow variable */
-  border: 1px solid var(--border-color); /* Use border variable */
-  transition: all 0.3s ease;
+/* --- TOAST NOTIFICATION STYLE --- */
+.custom-toast {
+  position: fixed; top: 20px; right: 20px; z-index: 9999;
+  background: white; padding: 16px 20px; border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  display: flex; align-items: center; gap: 12px;
+  animation: slideInRight 0.3s ease; border-left: 4px solid;
 }
+.custom-toast.success { border-color: #10b981; }
+.custom-toast.error { border-color: #ef4444; }
+.toast-icon { font-size: 1.2rem; display: flex; }
+.custom-toast.success .toast-icon { color: #10b981; }
+.custom-toast.error .toast-icon { color: #ef4444; }
+.toast-message { font-weight: 500; font-size: 0.95rem; color: #334155; }
+.toast-close { background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #94a3b8; margin-left: 10px; }
 
-.section-title {
-  font-size: 18px; font-weight: 600; /* Giảm độ đậm */
-  color: var(--text-color); /* Use text color */
-  margin: 0 0 20px 0;
-  transition: color 0.3s ease; /* Add transition */
-}
-
-.actions-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; /* Giảm minmax */
-}
-
-.action-btn {
-  display: flex; align-items: center; gap: 10px; padding: 14px 18px; /* Điều chỉnh padding */
-  border: 1px solid var(--border-color); /* Use border variable */
-  border-radius: 12px;
-  background: var(--bg-secondary-color); /* Use secondary background */
-  cursor: pointer; transition: all 0.3s ease; font-size: 14px; font-weight: 500; /* Giảm độ đậm */
-  color: var(--text-color); /* Use text color */
-  text-align: left; /* Căn trái text */
-}
-
-.action-btn:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 16px var(--shadow-color); /* Giảm đổ bóng */
-  border-color: var(--primary-color); /* Thêm border màu khi hover */
-  /* Keep semantic hover backgrounds */
-}
-
-.action-icon { font-size: 20px; color: currentColor; transition: color 0.3s ease;} /* Nhỏ hơn */
-
-/* Keep semantic hover styles */
-.pomodoro-action:hover { background: #fef3c7; border-color: #fbbf24; color: #92400e; }
-.pomodoro-action:hover .action-icon { color: #f59e0b; }
-.task-action:hover { background: #e0f2fe; border-color: #7dd3fc; color: #0369a1;}
-.task-action:hover .action-icon { color: #0ea5e9; }
-.study-action:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c;}
-.study-action:hover .action-icon { color: #ef4444; }
-.ai-action:hover { background: #dcfce7; border-color: #86efac; color: #047857;}
-.ai-action:hover .action-icon { color: #10b981; }
-
-
-/* Modal Styles - Nên dùng chung CSS modal thay vì lặp lại */
-/* ... (Giữ lại CSS Modal từ file Profile.css hoặc tạo file Modal.css riêng) ... */
-
+@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
 /* Responsive */
 @media (max-width: 1200px) {
-  .content-grid { grid-template-columns: 1fr; }
+  .bento-grid { grid-template-columns: 1fr 1fr; }
+  .col-right { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 }
+@media (max-width: 900px) {
+  .bento-grid { grid-template-columns: 1fr; }
+  .col-right { grid-column: auto; display: flex; }
+  .dashboard-modern { padding: 20px; }
+}
+/* CSS cho Activity List Modern */
+.activity-list { display: flex; flex-direction: column; gap: 15px; }
+.activity-item-modern { display: flex; gap: 12px; align-items: center; }
+.act-icon { 
+  width: 36px; height: 36px; background: #f1f5f9; border-radius: 50%; 
+  display: flex; align-items: center; justify-content: center; color: var(--dash-text-light);
+}
+.act-info { flex: 1; }
+.act-text { font-size: 0.9rem; font-weight: 500; margin: 0; color: var(--dash-text); }
+.act-time { font-size: 0.8rem; color: var(--dash-text-light); }
+.icon-wrapper.activity { background: #fff7ed; color: #ea580c; }
+/* =========================================
+   MODAL STYLES (Thêm vào cuối file)
+   ========================================= */
 
-@media (max-width: 992px) { /* Tablet */
-    .stats-grid { grid-template-columns: repeat(2, 1fr); } /* 2 cột trên tablet */
-}
-
-@media (max-width: 768px) {
-  .dashboard { /* Padding được xử lý bởi content-area */ }
-  .dashboard-header { flex-direction: column; gap: 16px; align-items: stretch; }
-  .date-info { justify-content: center; }
-  .welcome-title { font-size: 24px; } /* Nhỏ hơn */
-  .stats-grid { grid-template-columns: 1fr; }
-  .actions-grid { grid-template-columns: 1fr; }
-  /* .modal-content { width: 95%; margin: 20px; } */
-  /* .priority-options { flex-direction: column; } */
-}
-/* (Dán vào cuối file Dashboard.css) */
-
-.tasks-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.task-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.task-group-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-color);
-  margin: 0 0 4px 0;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.task-group-title.overdue {
-  color: #ef4444;
-}
-.task-group-title.today {
-  color: #f59e0b;
-}
-.task-group-title.upcoming {
-  color: var(--text-secondary-color);
-}
-
-.task-item .task-meta {
-  display: flex;
-  flex-wrap: wrap; /* Cho phép xuống dòng nếu không đủ */
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.task-workspace {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary-color);
-  background: var(--bg-color);
-  padding: 2px 8px;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-
-.spinner-small {
-  width: 24px;
-  height: 24px;
-  margin: 40px auto;
-  border: 3px solid rgba(102, 126, 234, 0.2);
-  border-top: 3px solid var(--primary-color);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+/* Lớp phủ mờ nền */
 .my-tasks-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.6); /* Nền tối mờ */
+  backdrop-filter: blur(8px); /* Hiệu ứng kính mờ nền */
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-  animation: modalFadeIn 0.2s ease-out;
+  z-index: 9999; /* Đảm bảo luôn nổi lên trên cùng */
+  animation: fadeInOverlay 0.2s ease-out;
 }
 
-@keyframes modalFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
+/* Hộp nội dung chính */
 .my-tasks-modal-content {
-  background: var(--bg-secondary-color);
-  border-radius: 16px;
+  background: #ffffff;
   width: 90%;
   max-width: 800px;
-  height: 80vh; /* Chiều cao 80% */
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  height: 85vh; /* Chiều cao 85% màn hình */
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
-  animation: modalSlideUp 0.3s ease-out;
+  overflow: hidden;
+  animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
-@keyframes modalSlideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Dark mode cho Modal */
+body.dark .my-tasks-modal-content {
+  background: #1e293b;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #f8fafc;
 }
 
+/* Header của Modal */
 .my-tasks-header {
+  padding: 20px 30px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border-color);
-  flex-shrink: 0; /* Ngăn header co lại */
+  background: rgba(255,255,255,0.5);
 }
+body.dark .my-tasks-header { border-bottom-color: rgba(255,255,255,0.1); background: rgba(30,41,59,0.5); }
 
 .my-tasks-header h1 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--text-color);
-  margin: 0;
+  font-size: 1.5rem; margin: 0;
+  display: flex; align-items: center; gap: 12px;
+  color: var(--dash-primary);
 }
 
-.my-tasks-header .close-modal-btn {
-  font-size: 24px;
-  color: var(--text-secondary-color);
-  background: var(--bg-color);
-  border: none;
+.close-modal-btn {
+  width: 40px; height: 40px;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: none;
+  background: rgba(0,0,0,0.05);
+  color: #64748b;
   cursor: pointer;
-  transition: all 0.2s ease;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  transition: 0.2s;
 }
-.my-tasks-header .close-modal-btn:hover {
-  background: var(--border-color);
-  transform: rotate(90deg);
-}
+.close-modal-btn:hover { background: #ef4444; color: white; transform: rotate(90deg); }
 
+/* Danh sách công việc trong Modal */
 .my-tasks-list {
-  padding: 24px;
-  overflow-y: auto; /* Cho phép cuộn */
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto; /* Cho phép cuộn dọc */
+  display: flex; flex-direction: column; gap: 20px;
+  background-color: #f8fafc;
 }
+body.dark .my-tasks-list { background-color: #0f172a; }
+
+/* Scrollbar đẹp cho Modal */
+.my-tasks-list::-webkit-scrollbar { width: 8px; }
+.my-tasks-list::-webkit-scrollbar-track { background: transparent; }
+.my-tasks-list::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+
+/* Style lại Task Item trong Modal cho đẹp hơn */
+.my-tasks-list .task-group-title {
+  font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 10px; padding-bottom: 5px;
+  border-bottom: 2px solid rgba(0,0,0,0.05);
+  color: #64748b;
+  display: flex; align-items: center; gap: 8px;
+}
+
 .my-tasks-list .task-item {
-  background: var(--bg-color);
+  background: white;
+  padding: 16px 20px;
+  border-radius: 16px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+  border: 1px solid rgba(0,0,0,0.04);
 }
+body.dark .my-tasks-list .task-item { background: #1e293b; border-color: rgba(255,255,255,0.05); }
+
 .my-tasks-list .task-item:hover {
-  background: var(--bg-secondary-color);
-  border-color: var(--primary-color);
-}
-/* (Dán vào cuối file Dashboard.css) */
-
-/* Thanh bao ngoài (đảm bảo nó có chiều cao) */
-.progress-bar {
-  width: 100%;
-  height: 8px; /* <-- DÒNG QUAN TRỌNG */
-  background: var(--border-color); /* Màu nền mờ */
-  border-radius: 4px;
-  overflow: hidden; /* Quan trọng để bo góc */
-  margin: 8px 0;
-}
-
-/* Thanh năng lượng (tiến độ) */
-.progress-fill {
-  height: 100%;
-  background: var(--primary-color); /* Màu chính */
-  border-radius: 4px;
-  transition: width 0.5s ease-out; /* Hiệu ứng mượt mà */
-}
-
-/* Màu riêng cho thanh "Today's Tasks" */
-.progress-fill.tasks-progress {
-  /* Bạn có thể dùng màu xanh lá nếu muốn */
-  /* background: var(--success-color, #10b981); */ 
-  background: var(--primary-color);
-}
-.stat-icon.check-in-icon {
-  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); 
-  color: #667eea;
-}
-
-/* Lưới 7 ngày */
-.week-days-grid {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.day-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary-color);
-  transition: all 0.2s ease;
-}
-
-.day-circle span {
-  line-height: 1.2;
-}
-
-.day-dot {
-  font-size: 14px;
-  height: 14px;
-}
-
-/* Khi là ngày hôm nay */
-.day-circle.today {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-}
-
-/* Khi đã điểm danh */
-.day-circle.checked {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-  color: white;
-}
-
-.day-circle.checked .day-dot {
-  color: white;
-}
-
-/* Nút Điểm danh */
-.check-in-btn {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: var(--primary-color);
-  color: white;
-}
-
-.check-in-btn:hover:not(:disabled) {
-  background: var(--primary-hover-color);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+  border-color: var(--dash-primary);
 }
 
-.check-in-btn:disabled {
-  background: #10b981; /* Màu xanh lá khi đã hoàn thành */
-  color: white;
-  opacity: 1;
-  cursor: not-allowed;
+/* Animation */
+@keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUpModal { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+/* --- TASK CHECKBOX SYNC --- */
+.task-item.completed {
+  opacity: 0.7;
+  background: #f0fdf4; /* Nền xanh nhạt */
+}
+.task-item.completed .task-title {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+.task-checkbox.checked {
+  color: #10b981; /* Icon màu xanh lá */
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Spinner nhỏ (đã có) */
-.spinner-small {
-  width: 24px;
-  height: 24px;
-  margin: 40px auto;
-  border: 3px solid rgba(102, 126, 234, 0.2);
-  border-top: 3px solid var(--primary-color);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-.tomato-counter {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  min-width: 100px;
-  justify-content: center;
-}
-
-.tomato-icon {
-  font-size: 15px;
-}
-
-.tomato-value {
-  font-size: 20px;
+@keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+/* --- MINI GROUP LABEL --- */
+.mini-group-label {
+  font-size: 0.8rem;
   font-weight: 700;
-  color: var(--text-color);
-  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 10px 0 5px 5px;
+  color: var(--dash-text-light);
+  display: flex; align-items: center; gap: 8px;
 }
 
-/* --- (CODE MỚI) Style cho Thẻ Điểm danh (Check-in) --- */
+.mini-group-label.overdue { color: #ef4444; }
+.mini-group-label.today { color: var(--dash-primary); }
+.mini-group-label.tomorrow { color: #f59e0b; } /* Màu cam cho ngày mai */
 
-/* Màu icon */
-.stat-icon.check-in-icon {
-  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); 
-  color: #667eea;
-}
-
-/* Lưới 7 ngày */
-.week-days-grid {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.day-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary-color);
-  transition: all 0.2s ease;
-}
-
-.day-circle span {
-  line-height: 1.2;
-}
-
-.day-dot {
-  font-size: 14px;
-  height: 14px;
-}
-
-/* Khi là ngày hôm nay */
-.day-circle.today {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-  box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
-}
-
-/* Khi đã điểm danh */
-.day-circle.checked {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-  color: white;
-}
-
-.day-circle.checked .day-dot {
-  color: white;
-}
-
-/* Nút Điểm danh */
-.check-in-btn {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: var(--primary-color);
-  color: white;
-}
-
-.check-in-btn:hover:not(:disabled) {
-  background: var(--primary-hover-color);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.check-in-btn:disabled {
-  background: #10b981; /* Màu xanh lá khi đã hoàn thành */
-  color: white;
-  opacity: 1;
-  cursor: not-allowed;
-}
-
-/* Spinner nhỏ (đã có) */
-.spinner-small {
-  width: 24px;
-  height: 24px;
-  margin: 40px auto;
-  border: 3px solid rgba(102, 126, 234, 0.2);
-  border-top: 3px solid var(--primary-color);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-.user-title-badge {
-  font-size: 0.6em;
-  vertical-align: middle;
-  background: linear-gradient(90deg, #FFD700, #FFA500); /* Màu vàng kim */
-  color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
-  margin-left: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+.mini-group-label::after {
+  content: ''; flex: 1; height: 1px; background: rgba(0,0,0,0.05);
 }

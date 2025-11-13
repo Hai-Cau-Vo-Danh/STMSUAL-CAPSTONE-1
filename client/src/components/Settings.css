@@ -1,217 +1,195 @@
-/* src/components/Settings.css - PHIÊN BẢN ĐÃ FIX LỖI VÀ TẠO KIỂU MỚI */
-
-/* Khai báo biến màu cơ bản */
+/* =========================================
+   ULTIMATE SETTINGS THEME
+   ========================================= */
 :root {
-  --primary-color: #6a11cb; 
-  --secondary-color: #2575fc; 
-
-  /* LIGHT MODE */
-  --bg-color: #ffffff;
-  --bg-secondary-color: #f7f9fc;
-  --text-color: #2c3e50;
-  --text-secondary-color: #6c7a89;
-  --border-color: #e0e6ed;
-  --shadow-color: rgba(0, 0, 0, 0.08);
-
-  /* Màu cụ thể cho Theme Active (SẼ ĐƯỢC CHỈNH SỬA) */
-  --theme-light-active-bg: linear-gradient(135deg, #FFD700, #FFA07A); /* Nắng */
-  --theme-dark-active-bg: linear-gradient(135deg, #121212, #2c3e50); /* Đen Huyền bí */
-
-  /* Màu cụ thể cho Language Active */
-  --lang-vi-active-bg: linear-gradient(135deg, #c0392b, #e74c3c); /* Đỏ */
-  --lang-en-active-bg: linear-gradient(135deg, #3498db, #2980b9); /* Xanh Biển */
+  --set-bg: #f3f4f6;           /* Nền tổng thể xám nhạt */
+  --set-sidebar-bg: #ffffff;   /* Nền Sidebar */
+  --set-content-bg: #ffffff;   /* Nền Content */
+  --set-text: #1f2937;         /* Màu chữ chính */
+  --set-text-muted: #6b7280;   /* Màu chữ phụ */
+  --set-border: #e5e7eb;       /* Viền */
+  --set-primary: #6366f1;      /* Màu chủ đạo (Indigo) */
+  --set-danger: #ef4444;       /* Màu đỏ (Logout/Delete) */
+  --set-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --set-hover: #f9fafb;        /* Màu hover */
 }
 
-/* DARK MODE */
+/* Dark Mode Variables */
 body.dark {
-  --bg-color: #1a202c;
-  --bg-secondary-color: #2d3748;
-  --text-color: #f7fafc;
-  --text-secondary-color: #a0aec0;
-  --border-color: #4a5568;
-  --shadow-color: rgba(0, 0, 0, 0.4);
+  --set-bg: #111827;
+  --set-sidebar-bg: #1f2937;
+  --set-content-bg: #1f2937;
+  --set-text: #f9fafb;
+  --set-text-muted: #9ca3af;
+  --set-border: #374151;
+  --set-hover: #374151;
 }
 
-body {
+.settings-layout {
+  display: flex;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 80vh;
   font-family: 'Inter', sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.settings-container {
-  padding: 40px;
-  max-width: 700px;
-  margin: 30px auto;
-  background-color: var(--bg-secondary-color);
+/* --- SIDEBAR NAVIGATION --- */
+.settings-sidebar {
+  width: 280px;
+  background: var(--set-sidebar-bg);
   border-radius: 16px;
-  box-shadow: 0 8px 30px var(--shadow-color);
-  border: 1px solid var(--border-color);
-  transition: all 0.3s ease;
+  padding: 20px;
+  box-shadow: var(--set-shadow);
+  border: 1px solid var(--set-border);
+  display: flex; flex-direction: column; gap: 8px;
+  height: fit-content;
 }
 
-.settings-container h1 {
-  text-align: left;
-  margin-bottom: 25px;
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--text-color);
-  border-bottom: 2px solid var(--primary-color);
-  padding-bottom: 10px;
-}
-
-.setting-section {
-  margin-bottom: 35px;
-  padding: 15px 0;
-  border-bottom: 1px dashed var(--border-color);
-}
-.setting-section:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.setting-section h2 {
-  margin-bottom: 20px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text-secondary-color);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* --- KIỂU CHUNG CHO CÁC NÚT CHUYỂN ĐỔI (THEME VÀ LANGUAGE) --- */
-
-.theme-toggle, .language-toggle {
-  display: flex;
-  background-color: var(--bg-color);
-  padding: 5px;
+.sidebar-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
   border-radius: 12px;
-  border: 1px solid var(--border-color);
-  width: fit-content;
-  overflow: hidden;
-  position: relative;
-  box-shadow: 0 2px 5px var(--shadow-color);
-}
-
-/* Kiểu cơ sở cho các nút trong Toggle */
-.theme-btn, .lang-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary-color);
-  font-size: 1rem;
+  color: var(--set-text-muted);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 120px;
-  z-index: 1; /* Đảm bảo nút nằm trên nền active */
+  transition: all 0.2s ease;
 }
 
-/* Hiệu ứng Hover chung */
-.theme-btn:hover:not(.active), .lang-btn:hover:not(.active) {
-  background-color: var(--bg-secondary-color);
-  color: var(--text-color);
+.sidebar-item:hover {
+  background-color: var(--set-hover);
+  color: var(--set-text);
 }
 
-/* --- 1. KIỂU CHO THEME (Sáng/Tối) --- */
+.sidebar-item.active {
+  background-color: #eff6ff; /* Xanh nhạt */
+  color: var(--set-primary);
+}
+body.dark .sidebar-item.active { background-color: rgba(99, 102, 241, 0.2); }
 
-.theme-btn.active {
-    color: white; /* Mặc định chữ trắng khi active */
+.sidebar-icon { font-size: 1.2rem; }
+
+/* --- MAIN CONTENT AREA --- */
+.settings-content {
+  flex: 1;
+  display: flex; flex-direction: column; gap: 24px;
+}
+
+/* Header của từng trang con */
+.settings-header {
+  background: var(--set-content-bg);
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: var(--set-shadow);
+  border: 1px solid var(--set-border);
+}
+.settings-header h2 { margin: 0; font-size: 1.5rem; color: var(--set-text); }
+.settings-header p { margin: 5px 0 0 0; color: var(--set-text-muted); font-size: 0.9rem; }
+
+/* Profile Card Mini */
+.profile-card-mini {
+  display: flex; align-items: center; gap: 16px;
+  padding-bottom: 20px; border-bottom: 1px solid var(--set-border); margin-bottom: 20px;
+}
+.mini-avatar {
+  width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
+  border: 2px solid var(--set-primary);
+}
+.mini-info h3 { margin: 0; font-size: 1.1rem; color: var(--set-text); }
+.mini-info span { color: var(--set-text-muted); font-size: 0.9rem; }
+.badge { 
+    display: inline-block; padding: 2px 8px; border-radius: 10px; 
+    font-size: 0.75rem; font-weight: 600; margin-top: 5px;
+    background: #dbeafe; color: #2563eb; 
+}
+
+/* --- SECTIONS & CARDS --- */
+.settings-card {
+  background: var(--set-content-bg);
+  border-radius: 16px;
+  box-shadow: var(--set-shadow);
+  border: 1px solid var(--set-border);
+  overflow: hidden;
+}
+
+.card-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--set-border);
+  transition: background 0.2s;
+}
+.card-row:last-child { border-bottom: none; }
+.card-row:hover { background-color: var(--set-hover); }
+
+.row-info { display: flex; align-items: center; gap: 15px; }
+.row-icon { 
+    width: 40px; height: 40px; border-radius: 10px; 
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; background: #f3f4f6; color: var(--set-text-muted);
+}
+/* Màu icon theo ngữ cảnh */
+.icon-theme { background: #fff7ed; color: #ea580c; }
+.icon-lang { background: #eff6ff; color: #2563eb; }
+.icon-noti { background: #f0fdf4; color: #16a34a; }
+.icon-danger { background: #fef2f2; color: #ef4444; }
+
+.row-text h4 { margin: 0; font-size: 1rem; color: var(--set-text); }
+.row-text p { margin: 2px 0 0 0; font-size: 0.85rem; color: var(--set-text-muted); }
+
+/* --- CUSTOM SWITCH TOGGLE (iOS Style) --- */
+.switch {
+  position: relative; display: inline-block; width: 50px; height: 28px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .4s; border-radius: 34px;
+}
+.slider:before {
+  position: absolute; content: "";
+  height: 20px; width: 20px;
+  left: 4px; bottom: 4px;
+  background-color: white;
+  transition: .4s; border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+input:checked + .slider { background-color: var(--set-primary); }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* --- SELECT DROPDOWN --- */
+.custom-select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--set-border);
+    background: var(--set-bg);
+    color: var(--set-text);
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+}
+
+/* --- DANGER ZONE BUTTON --- */
+.btn-danger-outline {
+    padding: 8px 16px;
+    border: 1px solid var(--set-danger);
+    color: var(--set-danger);
+    background: transparent;
+    border-radius: 8px;
     font-weight: 600;
-    box-shadow: 0 4px 10px var(--shadow-color);
+    cursor: pointer;
+    transition: all 0.2s;
 }
-
-/* HIỆU ỨNG ÁNH NẮNG MẶT TRỜI cho Nút Sáng */
-.theme-btn.theme-light.active {
-  background: 
-    radial-gradient(circle at 50% 15%, rgba(255,255,200,0.8) 0%, transparent 70%), /* Ánh sáng trung tâm */
-    linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6347 100%); /* Màu cam đỏ */
-  color: #333; /* Chữ màu tối trên nền sáng */
-  box-shadow: 0 4px 15px rgba(255, 160, 122, 0.6);
-}
-
-/* HIỆU ỨNG CHÒM SAO BAN ĐÊM cho Nút Tối */
-.theme-btn.theme-dark.active {
-  background: 
-    radial-gradient(circle at 70% 20%, rgba(255,255,255,0.1) 0%, transparent 60%), /* Hiệu ứng sao */
-    radial-gradient(circle at 30% 80%, rgba(255,255,255,0.15) 0%, transparent 70%), /* Hiệu ứng sao khác */
-    linear-gradient(135deg, #0f0c29, #302b63, #24243e); /* Gradient bầu trời đêm */
-  color: white;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
-}
-
-
-/* --- 2. KIỂU CHO NGÔN NGỮ (Language) --- */
-
-/* Tiếng Việt - ĐỎ */
-.lang-btn.lang-vi.active {
-    background: var(--lang-vi-active-bg);
-    color: rgb(225, 229, 8);
-    font-weight: 600;
-    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4);
-}
-
-/* Tiếng Anh - XANH BIỂN */
-.lang-btn.lang-en.active {
-    background: var(--lang-en-active-bg);
-    color: white;
-    font-weight: 600;
-    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
-}
-
-/* --- 3. KIỂU CHO THÔNG BÁO (Notifications) --- */
-
-/* Kiểu cho nút Bật/Tắt */
-.toggle-btn.notifications {
-  padding: 10px 25px;
-  border-radius: 8px;
-  font-weight: 600;
-  border: none; 
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-/* ĐÃ BẬT: Màu Xanh Lá */
-.toggle-btn.active-green {
-  background: linear-gradient(135deg, #2ecc71, #27ae60); /* Xanh lá */
-  color: white;
-  box-shadow: 0 4px 10px rgba(46, 204, 113, 0.4);
-}
-
-/* ĐÃ TẮT: Màu Đen/Xám đậm */
-.toggle-btn.active-dark {
-  background: linear-gradient(135deg, #34495e, #2c3e50); /* Xám đậm */
-  color: white;
-  box-shadow: 0 4px 10px rgba(52, 73, 94, 0.4);
-}
-
-.toggle-btn:hover:not(.active-green):not(.active-dark) {
-    background-color: var(--bg-color);
-    border: 1px solid var(--border-color);
-    color: var(--text-color);
+.btn-danger-outline:hover {
+    background: var(--set-danger); color: white;
 }
 
 /* Responsive */
-@media (max-width: 600px) {
-    .settings-container {
-        padding: 20px;
-        margin: 10px;
-    }
-    .theme-toggle, .language-toggle {
-        width: 100%;
-        justify-content: space-between;
-    }
-    .theme-btn, .lang-btn {
-        flex: 1;
-        padding: 10px;
-        min-width: unset;
-    }
+@media (max-width: 768px) {
+    .settings-layout { flex-direction: column; }
+    .settings-sidebar { width: 100%; display: flex; flex-direction: row; overflow-x: auto; padding: 10px; }
+    .sidebar-item { white-space: nowrap; flex-shrink: 0; }
+    .card-row { padding: 15px; }
 }

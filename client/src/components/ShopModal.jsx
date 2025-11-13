@@ -33,7 +33,7 @@ const ShopModal = ({ onClose, userInfo, onUpdateUser }) => {
 
   const handleBuy = async (item) => {
     if (currentTomatoes < item.price) {
-      alert("Bạn không đủ Cà chua! Hãy học thêm nhé 🍅");
+      alert("Bạn không đủ Cà chua! Hãy thu thập thêm nhé 🍅");
       return;
     }
     if (!window.confirm(`Bạn muốn mua "${item.name}" với giá ${item.price} 🍅?`)) return;

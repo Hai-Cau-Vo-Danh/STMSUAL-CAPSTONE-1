@@ -306,15 +306,12 @@ export const workspaceService = {
     return response.data;
   },
 
-  // --- (THÊM MỚI) SHOP SYSTEM ---
-  
-  // 1. Lấy danh sách hàng hóa và kho đồ
+  // --- (SHOP SYSTEM) ---
   getShopItems: async () => {
     const response = await axios.get(`${API_URL}/shop`, getAuthHeader());
     return response.data;
   },
 
-  // 2. Mua vật phẩm
   buyShopItem: async (itemId) => {
     const response = await axios.post(
         `${API_URL}/shop/buy`, 
@@ -324,7 +321,6 @@ export const workspaceService = {
     return response.data;
   },
 
-  // 3. Trang bị vật phẩm
   equipShopItem: async (itemId, type) => {
     const response = await axios.post(
         `${API_URL}/shop/equip`, 
@@ -332,6 +328,15 @@ export const workspaceService = {
         getAuthHeader()
     );
     return response.data;
+  },
+
+  // --- (THÊM MỚI: LEADERBOARD) ---
+  getLeaderboard: async () => {
+    const response = await axios.get(
+        `${API_URL}/leaderboard`,
+        getAuthHeader()
+    );
+    return response.data;
   }
-  // --- (KẾT THÚC PHẦN THÊM MỚI) ---
+  // --- (KẾT THÚC LEADERBOARD) ---
 };
