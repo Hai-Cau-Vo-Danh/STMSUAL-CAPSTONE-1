@@ -12,11 +12,13 @@ import { workspaceService } from '../services/workspaceService';
 import avt from "../assets/Trangchu/avt.png";
 
 // ---------- CONFIG & SOCKET ----------
-const SOCKET_SERVER_URL = import.meta.env.VITE_API_URL_BASE || 'http://localhost:5000';
+// ⚠️ SỬA ĐỔI: Dùng VITE_BACKEND_URL và đổi tên biến cục bộ thành API_BASE
+const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 const peerConnectionConfig = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }]
 };
-const socket = io(SOCKET_SERVER_URL, { transports: ['websocket', 'polling'], autoConnect: true });
+// ⚠️ SỬA ĐỔI: Sử dụng API_BASE cho socket.io
+const socket = io(API_BASE, { transports: ['websocket', 'polling'], autoConnect: true });
 
 // ---------- HELPER FUNCTIONS ----------
 const getUserId = () => { try { const u = localStorage.getItem("user"); return u ? JSON.parse(u)?.user_id : null; } catch (e) { return null; } };
@@ -90,7 +92,7 @@ const StudyRoom = () => {
   const [showReadyCheck, setShowReadyCheck] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [readyCount, setReadyCount] = useState({ ready: 0, total: 0 });
-  const [showRewardPopup, setShowRewardPopup] = useState(false); // <-- MỚI: Popup thưởng
+  const [showRewardPopup, setShowRewardPopup] = useState(false); 
 
   // Chat & History
   const [chatMessages, setChatMessages] = useState([]);
@@ -153,17 +155,19 @@ const StudyRoom = () => {
   const fetchHistory = async () => {
     setHistoryLoading(true);
     try {
+      // Lưu ý: workspaceService cần được sửa để dùng API_BASE
       const data = await workspaceService.getPomodoroHistory();
       setHistory(data);
     } catch (err) { console.error(err); } finally { setHistoryLoading(false); }
   };
 
+  // ⚠️ SỬA ĐỔI: Sử dụng API_BASE cho lịch sử phòng
   const fetchStudyRoomHistory = async () => {
     setStudyRoomHistoryLoading(true);
     try {
       const token = localStorage.getItem('token');
       if (!token) { setStudyRoomHistoryLoading(false); return; }
-      const response = await fetch(`${SOCKET_SERVER_URL}/api/me/study-room-history`, {
+      const response = await fetch(`${API_BASE}/api/me/study-room-history`, {
         method: 'GET', headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) setStudyRoomHistory(await response.json());
@@ -256,7 +260,6 @@ const StudyRoom = () => {
       addSystemMessage("Quyền chủ phòng đã được chuyển.");
     };
 
-    // <-- MỚI: Handle Tomato Reward
     const handleTomatoRewarded = () => {
       setShowRewardPopup(true);
       playAlarm();
@@ -279,7 +282,7 @@ const StudyRoom = () => {
     socket.on('new_message', handleNewMessage);
     socket.on('user_kicked', handleUserKicked);
     socket.on('new_host_assigned', handleNewHost);
-    socket.on('tomato_rewarded', handleTomatoRewarded); // <-- Đăng ký
+    socket.on('tomato_rewarded', handleTomatoRewarded);
 
     return () => {
       socket.off('connect', handleConnect);
@@ -297,7 +300,7 @@ const StudyRoom = () => {
       socket.off('new_message', handleNewMessage);
       socket.off('user_kicked', handleUserKicked);
       socket.off('new_host_assigned', handleNewHost);
-      socket.off('tomato_rewarded', handleTomatoRewarded); // <-- Cleanup
+      socket.off('tomato_rewarded', handleTomatoRewarded);
     };
   }, [userInfo, isInRoom]);
 
@@ -355,6 +358,7 @@ const StudyRoom = () => {
   const handleOpenTaskModal = async () => {
     if (!isHost) return;
     setModalLoading(true); setShowTaskModal(true);
+    // Lưu ý: workspaceService cần được sửa để dùng API_BASE
     try {
       const data = await workspaceService.getHostSelectableTasks();
       setModalTaskGroups(data);
