@@ -4,8 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   
-  // 🔥 KHẮC PHỤC LỖI MODULE: Đảm bảo các thư viện i18next được Vite xử lý và tối ưu hóa đúng cách.
-  // Đây là giải pháp đã được xác nhận để sửa lỗi "Failed to resolve module specifier".
+  // Khắc phục lỗi module resolution (Đã sửa ở bước trước)
   optimizeDeps: {
     include: [
       'i18next-browser-languagedetector',
@@ -13,20 +12,20 @@ export default defineConfig({
     ]
   },
   
-  // 🔥 KHỐI BUILD (Đã bỏ phần external sai)
+  // KHỐI BUILD (Giữ lại)
   build: {
     outDir: 'dist', 
-    // BỎ KHỐI rollupOptions.external (Vì nó gây ra lỗi màn hình trắng)
   },
   
-  // 🔥 KHỐI SERVER (Giữ lại cho Local Development)
+  // 🔥 KHỐI SERVER: ĐÃ SỬA TARGET ĐỂ TRỎ VỀ RENDER BACKEND
   server: {
     proxy: {
-      // Proxy để chuyển tiếp yêu cầu API sang backend Flask khi chạy cục bộ
+      // Khi chạy LOCAL, mọi yêu cầu /api sẽ được chuyển đến URL Render
       '/api': {
-        target: 'http://localhost:5000', 
+        // ĐÂY LÀ PHẦN ĐÃ SỬA: SỬ DỤNG URL CỦA BẠN TRÊN RENDER
+        target: 'https://stmsuai-capstone.onrender.com', 
         changeOrigin: true, 
-        secure: false,
+        secure: false, 
       }
     }
   }
