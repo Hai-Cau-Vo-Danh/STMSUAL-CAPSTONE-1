@@ -1,38 +1,33 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig(({ mode }) => { // 💡 Chỉnh sửa quan trọng: Lấy 'mode'
+export default defineConfig({
+  plugins: [react()],
   
-  // Kiểm tra xem chúng ta đang ở chế độ DEV hay PRODUCTION
-  const isDevelopment = mode === 'development';
-
-  return {
-    plugins: [react()],
-    
-    // FIX 1: Thêm 'base' để dùng đường dẫn tương đối (Base path fix)
-    base: './', 
-    
-    // FIX 2: Chỉ sử dụng Proxy trong môi trường DEV
-    server: isDevelopment ? {
-      proxy: {
-        // Proxy để chuyển tiếp yêu cầu API sang backend Flask khi chạy cục bộ
-        '/api': {
-          target: 'http://localhost:5000', 
-          changeOrigin: true, 
-          secure: false,
-        }
+  // 🔥 KHẮC PHỤC LỖI MODULE: Đảm bảo các thư viện i18next được Vite xử lý và tối ưu hóa đúng cách.
+  // Đây là giải pháp đã được xác nhận để sửa lỗi "Failed to resolve module specifier".
+  optimizeDeps: {
+    include: [
+      'i18next-browser-languagedetector',
+      'i18next-http-backend' 
+    ]
+  },
+  
+  // 🔥 KHỐI BUILD (Đã bỏ phần external sai)
+  build: {
+    outDir: 'dist', 
+    // BỎ KHỐI rollupOptions.external (Vì nó gây ra lỗi màn hình trắng)
+  },
+  
+  // 🔥 KHỐI SERVER (Giữ lại cho Local Development)
+  server: {
+    proxy: {
+      // Proxy để chuyển tiếp yêu cầu API sang backend Flask khi chạy cục bộ
+      '/api': {
+        target: 'http://localhost:5000', 
+        changeOrigin: true, 
+        secure: false,
       }
-    } : {}, // TRẢ VỀ OBJECT RỖNG KHI CHẠY TRÊN VERCEL/PRODUCTION
-
-    // KHỐI BUILD
-    build: {
-      outDir: 'dist', 
-      rollupOptions: {
-        external: [
-          'i18next-browser-languagedetector', 
-          'i18next-http-backend' 
-        ],
-      },
-    },
-  };
+    }
+  }
 });
