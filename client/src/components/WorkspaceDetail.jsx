@@ -39,7 +39,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import CardDetailModal from './CardDetailModal'; 
 import avt from "../assets/Trangchu/avt.png"; 
 
-const SOCKET_URL = 'http://localhost:5000'; 
+// ⚠️ SỬA ĐỔI: Dùng biến môi trường cho URL Socket.io
+const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'; 
 
 // (Component DroppableList giữ nguyên)
 function DroppableList({ list, children }) {
@@ -137,7 +138,7 @@ function WorkspaceDetail() {
     }),
   );
 
-  // (useEffect fetch data và socket giữ nguyên)
+  // (useEffect fetch data và socket) ĐÃ SỬA SOCKET URL
   useEffect(() => {
     const fetchWorkspaceData = async () => {
       try {
@@ -155,8 +156,9 @@ function WorkspaceDetail() {
     };
     fetchWorkspaceData();
     
-    // (Logic Socket.IO giữ nguyên)
+    // (Logic Socket.IO) ĐÃ SỬA SOCKET URL
     if (socketRef.current) { return; }
+    // ⚠️ SỬA ĐỔI: Sử dụng SOCKET_URL đã được định nghĩa bằng biến môi trường
     const newSocket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
     });
@@ -646,7 +648,7 @@ function WorkspaceDetail() {
                           type="text"
                           placeholder="Nhập tiêu đề card..."
                           value={newCardTitle}
-                          onChange={(e) => setNewCardTitle(e.target.value)} // <--- SỬA LỖI TYPO
+                          onChange={(e) => setNewCardTitle(e.target.value)}
                           onKeyDown={(e) => e.key === 'Enter' && handleAddCard(list.id)}
                           autoFocus
                         />
