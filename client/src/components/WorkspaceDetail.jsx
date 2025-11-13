@@ -39,7 +39,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import CardDetailModal from './CardDetailModal'; 
 import avt from "../assets/Trangchu/avt.png"; 
 
-// ⚠️ SỬA ĐỔI: Dùng biến môi trường cho URL Socket.io
+// ⚠️ ĐÃ SỬA: Dùng biến môi trường thay vì cứng nhắc localhost
 const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'; 
 
 // (Component DroppableList giữ nguyên)
@@ -158,7 +158,8 @@ function WorkspaceDetail() {
     
     // (Logic Socket.IO) ĐÃ SỬA SOCKET URL
     if (socketRef.current) { return; }
-    // ⚠️ SỬA ĐỔI: Sử dụng SOCKET_URL đã được định nghĩa bằng biến môi trường
+    
+    // ⚠️ ĐÃ SỬA: Sử dụng SOCKET_URL động
     const newSocket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
     });
