@@ -4,6 +4,9 @@ import "./auth.css";
 import loginArt from "../assets/DangNhap/login-art.png";
 import { BsPerson, BsEnvelope, BsLock, BsArrowLeft, BsExclamationCircle } from "react-icons/bs";
 
+// ⚠️ KHAI BÁO BIẾN MÔI TRƯỜNG Ở ĐÂY
+const API_BASE = import.meta.env.VITE_BACKEND_URL || "";
+
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
@@ -47,7 +50,8 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("${API_BASE}/api/register", {
+      // ⚠️ SỬA ĐỔI: Sử dụng API_BASE đã định nghĩa
+      const res = await fetch(`${API_BASE}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
