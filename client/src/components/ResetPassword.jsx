@@ -5,6 +5,9 @@ import loginArt from "../assets/DangNhap/login-art.png";
 // Import các icon cần thiết
 import { BsLock, BsShieldLock, BsArrowLeft, BsCheckCircle, BsExclamationCircle } from "react-icons/bs";
 
+// ⚠️ ĐÃ SỬA: Định nghĩa API_BASE từ biến môi trường
+const API_BASE = import.meta.env.VITE_BACKEND_URL || '';
+
 const ResetPassword = () => {
   const navigate = useNavigate();
   const { token } = useParams(); // Lấy token từ URL
@@ -38,7 +41,8 @@ const ResetPassword = () => {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/reset-password", {
+      // ⚠️ ĐÃ SỬA: Sử dụng API_BASE thay vì localhost
+      const res = await fetch(`${API_BASE}/api/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
