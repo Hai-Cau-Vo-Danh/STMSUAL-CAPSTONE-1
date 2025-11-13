@@ -14,7 +14,7 @@ import {
     useSensor,
     useSensors,
     DragOverlay,
-    useDroppable // <-- (ĐÃ SỬA) Đã import
+    useDroppable
 } from '@dnd-kit/core';
 import {
     arrayMove,
@@ -74,27 +74,27 @@ const SortableTaskItem = ({ task, columnId, openEditModal }) => {
 
 // Component Droppable cho Cột (giữ nguyên)
 function DroppableTaskColumn({ columnId, children, isOver }) {
-  const { setNodeRef } = useDroppable({
-    id: columnId, 
-    data: {
-      type: 'column' 
-    }
-  });
+    const { setNodeRef } = useDroppable({
+        id: columnId, 
+        data: {
+            type: 'column' 
+        }
+    });
 
-  return (
-    <div 
-      ref={setNodeRef} 
-      className={`column-content ${isOver ? 'droppable-over-column' : ''}`}
-    >
-      {children}
-    </div>
-  );
+    return (
+        <div 
+            ref={setNodeRef} 
+            className={`column-content ${isOver ? 'droppable-over-column' : ''}`}
+        >
+            {children}
+        </div>
+    );
 }
 
 
 // Component Cột (giữ nguyên)
 const TaskColumn = ({ columnId, title, tasksCount, tasks, openCreateModal, openEditModal }) => { 
-    const [isCardOver, setIsCardOver] = useState(false); // (Giữ nguyên, sẽ dùng sau)
+    const [isCardOver, setIsCardOver] = useState(false);
 
     return (
         <div className="task-column">
@@ -137,6 +137,9 @@ const TaskColumn = ({ columnId, title, tasksCount, tasks, openCreateModal, openE
 };
 
 
+// ⚠️ ĐỊNH NGHĨA BIẾN API_BASE Ở NGOÀI COMPONENT (hoặc bên trong nếu cần)
+// Sử dụng VITE_BACKEND_URL (từ Vercel) hoặc chuỗi rỗng (để dùng Proxy/relative path local)
+const API_BASE = import.meta.env.VITE_BACKEND_URL || ''; 
 
 const TaskBoard = () => {
     // (Các state giữ nguyên)
@@ -160,7 +163,7 @@ const TaskBoard = () => {
         catch (e) { console.error("Lỗi user ID:", e); return null; }
     };
 
-    // (fetchTasks giữ nguyên)
+    // (fetchTasks) ĐÃ SỬA URL
     const fetchTasks = async () => {
         setIsLoading(true);
         setError(null);
@@ -171,6 +174,7 @@ const TaskBoard = () => {
             return;
         }
         try {
+            // 1. SỬ DỤNG API_BASE
             const response = await fetch(`${API_BASE}/api/tasks?userId=${userId}`);
             if (!response.ok) {
                  if (response.status === 404) throw new Error(`API /api/tasks không tồn tại (404).`);
@@ -234,7 +238,7 @@ const TaskBoard = () => {
     };
 
 
-    // --- (HÀM DND) ---
+    // --- (HÀM DND giữ nguyên) ---
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -242,15 +246,13 @@ const TaskBoard = () => {
         })
     );
 
-    // (findColumnContainingTask giữ nguyên)
+    // (findColumnContainingTask, handleDragStart giữ nguyên)
     function findColumnContainingTask(taskId) {
         if (!taskId || !columns) return undefined;
         return Object.keys(columns).find(columnId =>
             columns[columnId] && columns[columnId].tasks.some(task => task.id === taskId)
         );
     }
-
-    // (handleDragStart giữ nguyên)
     function handleDragStart(event) {
         const { active } = event;
         const taskId = active.id;
@@ -260,27 +262,21 @@ const TaskBoard = () => {
         }
     }
 
-    // --- (SỬA LỖI) XÓA HÀM `handleDragOver` ---
-    // Chúng ta không cần optimistic updates ở đây, nó gây lỗi
-    // function handleDragOver(event) { ... }
-    // --- (KẾT THÚC SỬA LỖI) ---
 
-
-    // --- (SỬA LỖI) HÀM `handleDragEnd` được VIẾT LẠI ---
+    // --- (HÀM handleDragEnd) ĐÃ SỬA URL ---
     async function handleDragEnd(event) {
         const { active, over } = event;
         const activeId = active.id;
         const overId = over?.id;
 
-        setActiveTask(null); // Tắt overlay
+        setActiveTask(null);
 
         if (!overId || !columns || activeId === overId) {
-            return; // Không có gì thay đổi
+            return;
         }
 
         const activeColumnId = active.data.current?.columnId;
         
-        // Logic tìm overColumnId (giữ nguyên)
         let overColumnId;
         if (over.data.current?.type === 'column') {
             overColumnId = over.id;
@@ -296,9 +292,8 @@ const TaskBoard = () => {
 
         // --- BẮT ĐẦU CẬP NHẬT STATE VÀ API ---
         
-        // 1. Cập nhật UI (State)
-        const oldState = columns; // Lưu state cũ để rollback nếu lỗi
-        let newState = JSON.parse(JSON.stringify(columns)); // Tạo bản sao sâu
+        const oldState = columns;
+        let newState = JSON.parse(JSON.stringify(columns));
         
         let taskToMove;
         let oldIndex;
@@ -312,7 +307,7 @@ const TaskBoard = () => {
                 newIndex = columnTasks.findIndex(task => task.id === overId);
                 
                 if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
-                    return; // Không thay đổi
+                    return;
                 }
                 
                 newState[activeColumnId].tasks = arrayMove(columnTasks, oldIndex, newIndex);
@@ -328,15 +323,15 @@ const TaskBoard = () => {
                 // Lấy thẻ ra khỏi cột cũ
                 [taskToMove] = newState[activeColumnId].tasks.splice(oldIndex, 1);
                 
-                // Cập nhật status của thẻ (quan trọng)
+                // Cập nhật status của thẻ
                 taskToMove.status = overColumnId; 
 
                 // Tìm vị trí mới
                 newIndex = over.data.current?.type === 'column' 
-                    ? overItems.length // Thả vào cột rỗng
+                    ? overItems.length
                     : overItems.findIndex((task) => task.id === overId);
                     
-                if (newIndex === -1) newIndex = overItems.length; // An toàn
+                if (newIndex === -1) newIndex = overItems.length;
 
                 // Thêm thẻ vào cột mới
                 newState[overColumnId].tasks.splice(newIndex, 0, taskToMove);
@@ -349,8 +344,7 @@ const TaskBoard = () => {
             // Cập nhật UI ngay lập tức
             setColumns(newState);
 
-            // 2. Gọi API để lưu
-            // (Chỉ gọi API nếu kéo sang cột khác, vì kéo cùng cột chỉ là sắp xếp)
+            // 2. Gọi API để lưu (SỬ DỤNG API_BASE)
             if (activeColumnId !== overColumnId) {
                 const response = await fetch(`${API_BASE}/api/tasks/${activeId}`, {
                     method: 'PUT',
@@ -360,7 +354,7 @@ const TaskBoard = () => {
                     },
                     body: JSON.stringify({ 
                         user_id: userId, 
-                        status: overColumnId // Task Status ID mới
+                        status: overColumnId
                     })
                 });
 
@@ -369,7 +363,7 @@ const TaskBoard = () => {
                     throw new Error(errorData.message || 'Lỗi server khi cập nhật trạng thái'); 
                 }
                 
-                // 3. Gọi API Thông báo (nếu cần)
+                // 3. Gọi API Thông báo (nếu cần) (SỬ DỤNG API_BASE)
                 if (overColumnId === DONE_STATUS_ID && activeColumnId !== DONE_STATUS_ID) {
                     const notifResponse = await fetch(`${API_BASE}/api/tasks/${activeId}/complete`, {
                         method: 'POST',
@@ -379,40 +373,44 @@ const TaskBoard = () => {
                         }
                     });
                     if (!notifResponse.ok) {
-                         console.error("Lỗi khi gửi thông báo hoàn thành.");
+                          console.error("Lỗi khi gửi thông báo hoàn thành.");
                     }
                 }
             }
-            // (Bạn có thể thêm API để lưu vị trí (position) nếu kéo trong cùng 1 cột ở đây)
 
         } catch (err) {
             setError(`Lỗi cập nhật: ${err.message}`);
             alert(`Lỗi cập nhật: ${err.message}`);
-            // Rollback UI (trả về state cũ)
             setColumns(oldState); 
         }
     }
-    // --- (KẾT THÚC SỬA LỖI) ---
 
 
-    // (Các hàm CRUD: handleQuickCreate, handleCreateTask, handleEditTask, handleDeleteTask... đều được GIỮ NGUYÊN)
-    const handleQuickCreate = async () => { /* ... Giữ nguyên ... */
-        if (!naturalLanguageInput.trim()) return; const userId = getUserId(); if (!userId) { alert("..."); return; } const parsed = parseNaturalLanguage(naturalLanguageInput); const taskData = { creator_id: userId, title: parsed.title, priority: parsed.priority, deadline: parsed.deadline || null, status: selectedColumn }; setIsLoading(true); setError(null); try { const response = await fetch('${API_BASE}/api/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(taskData) }); const createdTask = await response.json(); if (!response.ok) throw new Error(createdTask.message || 'Lỗi'); setColumns(prev => { const t = createdTask.status || selectedColumn; if (!prev[t]) return prev; const n = { ...createdTask }; const u = [n, ...(prev[t].tasks || [])]; return { ...prev, [t]: { ...prev[t], tasks: u, count: u.length } }; }); setNaturalLanguageInput(''); setShowCreateModal(false); } catch (err) { setError(`Lỗi: ${err.message}`); alert(`Lỗi: ${err.message}`); } finally { setIsLoading(false); }
+    // --- (Các hàm CRUD) ĐÃ SỬA URL ---
+    const handleQuickCreate = async () => {
+        if (!naturalLanguageInput.trim()) return; const userId = getUserId(); if (!userId) { alert("..."); return; } const parsed = parseNaturalLanguage(naturalLanguageInput); const taskData = { creator_id: userId, title: parsed.title, priority: parsed.priority, deadline: parsed.deadline || null, status: selectedColumn }; setIsLoading(true); setError(null); try { 
+            // 4. SỬ DỤNG API_BASE
+            const response = await fetch(`${API_BASE}/api/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(taskData) }); const createdTask = await response.json(); if (!response.ok) throw new Error(createdTask.message || 'Lỗi'); setColumns(prev => { const t = createdTask.status || selectedColumn; if (!prev[t]) return prev; const n = { ...createdTask }; const u = [n, ...(prev[t].tasks || [])]; return { ...prev, [t]: { ...prev[t], tasks: u, count: u.length } }; }); setNaturalLanguageInput(''); setShowCreateModal(false); } catch (err) { setError(`Lỗi: ${err.message}`); alert(`Lỗi: ${err.message}`); } finally { setIsLoading(false); }
     };
-    const handleCreateTask = async () => { /* ... Giữ nguyên ... */
-        if (!newTask.title.trim()) return; const userId = getUserId(); if (!userId) { alert("..."); return; } const taskData = { creator_id: userId, title: newTask.title, description: newTask.description || null, priority: newTask.priority, deadline: newTask.deadline || null, status: selectedColumn }; setIsLoading(true); setError(null); try { const response = await fetch('${API_BASE}/api/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(taskData) }); const createdTask = await response.json(); if (!response.ok) throw new Error(createdTask.message || 'Lỗi'); setColumns(prev => { const t = createdTask.status || selectedColumn; if (!prev[t]) return prev; const n = { ...createdTask }; const u = [n, ...(prev[t].tasks || [])]; return { ...prev, [t]: { ...prev[t], tasks: u, count: u.length } }; }); setNewTask({ title: '', description: '', priority: 'medium', deadline: '', tags: [] }); setCurrentTag(''); setShowCreateModal(false); } catch (err) { setError(`Lỗi: ${err.message}`); alert(`Lỗi: ${err.message}`); } finally { setIsLoading(false); }
+    const handleCreateTask = async () => { 
+        if (!newTask.title.trim()) return; const userId = getUserId(); if (!userId) { alert("..."); return; } const taskData = { creator_id: userId, title: newTask.title, description: newTask.description || null, priority: newTask.priority, deadline: newTask.deadline || null, status: selectedColumn }; setIsLoading(true); setError(null); try { 
+            // 5. SỬ DỤNG API_BASE
+            const response = await fetch(`${API_BASE}/api/tasks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(taskData) }); const createdTask = await response.json(); if (!response.ok) throw new Error(createdTask.message || 'Lỗi'); setColumns(prev => { const t = createdTask.status || selectedColumn; if (!prev[t]) return prev; const n = { ...createdTask }; const u = [n, ...(prev[t].tasks || [])]; return { ...prev, [t]: { ...prev[t], tasks: u, count: u.length } }; }); setNewTask({ title: '', description: '', priority: 'medium', deadline: '', tags: [] }); setCurrentTag(''); setShowCreateModal(false); } catch (err) { setError(`Lỗi: ${err.message}`); alert(`Lỗi: ${err.message}`); } finally { setIsLoading(false); }
      };
-    const handleEditTask = async () => { /* ... Giữ nguyên ... */
-        if (!editingTask || !editingTask.title.trim()) return; const userId = getUserId(); if (!userId) { alert("..."); return; } const deadlineToSend = editingTask.deadline || null; const updateData = { user_id: userId, title: editingTask.title, description: editingTask.description || null, priority: editingTask.priority, deadline: deadlineToSend, status: editingTask.status }; setIsLoading(true); setError(null); try { const response = await fetch(`${API_BASE}/api/tasks/${editingTask.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateData) }); const updatedTask = await response.json(); if (!response.ok) throw new Error(updatedTask.message || 'Lỗi'); setColumns(prev => { const n = { ...prev }; let colChanged = false; let oldColId; for (const c in n) { const taskIndex = n[c].tasks.findIndex(t => t.id === updatedTask.id); if (taskIndex !== -1) { oldColId = c; if (c !== updatedTask.status) { colChanged = true; n[c].tasks.splice(taskIndex, 1); n[c].count = n[c].tasks.length; } else { n[c].tasks[taskIndex] = { ...updatedTask }; } break; } } if (colChanged && n[updatedTask.status]) { n[updatedTask.status].tasks.unshift({ ...updatedTask }); n[updatedTask.status].count = n[updatedTask.status].tasks.length; } return n; }); setShowEditModal(false); setEditingTask(null); setCurrentTag(''); } catch (err) { setError(`Lỗi: ${err.message}`); alert(`Lỗi: ${err.message}`); } finally { setIsLoading(false); }
+    const handleEditTask = async () => { 
+        if (!editingTask || !editingTask.title.trim()) return; const userId = getUserId(); if (!userId) { alert("..."); return; } const deadlineToSend = editingTask.deadline || null; const updateData = { user_id: userId, title: editingTask.title, description: editingTask.description || null, priority: editingTask.priority, deadline: deadlineToSend, status: editingTask.status }; setIsLoading(true); setError(null); try { 
+            // 6. SỬ DỤNG API_BASE
+            const response = await fetch(`${API_BASE}/api/tasks/${editingTask.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updateData) }); const updatedTask = await response.json(); if (!response.ok) throw new Error(updatedTask.message || 'Lỗi'); setColumns(prev => { const n = { ...prev }; let colChanged = false; let oldColId; for (const c in n) { const taskIndex = n[c].tasks.findIndex(t => t.id === updatedTask.id); if (taskIndex !== -1) { oldColId = c; if (c !== updatedTask.status) { colChanged = true; n[c].tasks.splice(taskIndex, 1); n[c].count = n[c].tasks.length; } else { n[c].tasks[taskIndex] = { ...updatedTask }; } break; } } if (colChanged && n[updatedTask.status]) { n[updatedTask.status].tasks.unshift({ ...updatedTask }); n[updatedTask.status].count = n[updatedTask.status].tasks.length; } return n; }); setShowEditModal(false); setEditingTask(null); setCurrentTag(''); } catch (err) { setError(`Lỗi: ${err.message}`); alert(`Lỗi: ${err.message}`); } finally { setIsLoading(false); }
      };
-    const handleDeleteTask = async (taskId) => { /* ... Giữ nguyên ... */
-        if (!window.confirm("Bạn chắc chắn muốn xóa?")) return; const userId = getUserId(); if (!userId) { alert("..."); return; } setIsLoading(true); setError(null); try { const response = await fetch(`${API_BASE}/api/tasks/${taskId}?userId=${userId}`, { method: 'DELETE' }); const data = await response.json(); if (!response.ok) throw new Error(data.message || 'Lỗi'); setColumns(prev => { const n = { ...prev }; for (const c in n) { const tasksBefore = n[c].tasks.length; n[c].tasks = n[c].tasks.filter(t => t.id !== taskId); if (tasksBefore > n[c].tasks.length) { n[c].count = n[c].tasks.length; } } return n; }); setShowEditModal(false); setEditingTask(null); } catch (err) { setError(`Lỗi: ${err.message}`); alert(`Lỗi: ${err.message}`); } finally { setIsLoading(false); }
+    const handleDeleteTask = async (taskId) => { 
+        if (!window.confirm("Bạn chắc chắn muốn xóa?")) return; const userId = getUserId(); if (!userId) { alert("..."); return; } setIsLoading(true); setError(null); try { 
+            // 7. SỬ DỤNG API_BASE
+            const response = await fetch(`${API_BASE}/api/tasks/${taskId}?userId=${userId}`, { method: 'DELETE' }); const data = await response.json(); if (!response.ok) throw new Error(data.message || 'Lỗi'); setColumns(prev => { const n = { ...prev }; for (const c in n) { const tasksBefore = n[c].tasks.length; n[c].tasks = n[c].tasks.filter(t => t.id !== taskId); if (tasksBefore > n[c].tasks.length) { n[c].count = n[c].tasks.length; } } return n; }); setShowEditModal(false); setEditingTask(null); } catch (err) { setError(`Lỗi: ${err.message}`); alert(`Lỗi: ${err.message}`); } finally { setIsLoading(false); }
      };
     const handleAddTag = (isEdit = false) => { /* ... giữ nguyên ... */ if (currentTag.trim()) { if (isEdit && editingTask) { setEditingTask({ ...editingTask, tags: [...(editingTask.tags || []), currentTag.trim()] }); } else { setNewTask({ ...newTask, tags: [...(newTask.tags || []), currentTag.trim()] }); } setCurrentTag(''); } };
     const handleRemoveTag = (tagIndex, isEdit = false) => { /* ... giữ nguyên ... */ if (isEdit && editingTask) { setEditingTask({ ...editingTask, tags: (editingTask.tags || []).filter((_, i) => i !== tagIndex) }); } else { setNewTask({ ...newTask, tags: (newTask.tags || []).filter((_, i) => i !== tagIndex) }); } };
     const openCreateModal = (columnId) => { /* ... giữ nguyên ... */ setSelectedColumn(columnId); setNewTask({ title: '', description: '', priority: 'medium', deadline: '', tags: [] }); setCurrentTag(''); setNaturalLanguageInput(''); setError(null); setShowCreateModal(true); };
     
-    // (openEditModal giữ nguyên)
     const openEditModal = (task) => { 
         const deadlineForInput = task.deadline ? task.deadline.split('T')[0] : ''; 
         setEditingTask({ ...task, tags: task.tags || [], deadline: deadlineForInput, priority: task.priority || task.flag || 'low' }); 
@@ -446,8 +444,6 @@ const TaskBoard = () => {
             sensors={sensors}
             collisionDetection={closestCorners}
             onDragStart={handleDragStart}
-            // --- (SỬA LỖI) Xóa onDragOver ---
-            // onDragOver={handleDragOver} 
             onDragEnd={handleDragEnd}
         >
             <div className="taskboard-wrapper">
@@ -481,10 +477,10 @@ const TaskBoard = () => {
                 {/* Overlay (Giữ nguyên) */}
                 <DragOverlay>
                     {activeTask ? (
-                         <TaskCard
-                            task={{ ...activeTask, date: activeTask.deadline ? new Date(activeTask.deadline).toLocaleDateString('en-GB', { day:'2-digit', month: 'short' }) : '' }}
-                            isOverlay={true} 
-                         />
+                             <TaskCard
+                                task={{ ...activeTask, date: activeTask.deadline ? new Date(activeTask.deadline).toLocaleDateString('en-GB', { day:'2-digit', month: 'short' }) : '' }}
+                                isOverlay={true} 
+                             />
                     ) : null}
                 </DragOverlay>
 
