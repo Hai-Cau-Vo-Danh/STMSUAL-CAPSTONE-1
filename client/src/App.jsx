@@ -22,7 +22,7 @@ import Calendar from "./components/Calendar";
 import Pomodoro from "./components/Pomodoro";
 import AIAssistant from "./components/AIAssistant";
 import Workspaces from "./components/Workspaces";
-import WorkspaceDetail from "./components/Workspacedetail";
+import WorkspaceDetail from "./components/WorkspaceDetail";
 import WorkspaceSettings from "./components/WorkspaceSettings"; 
 import StudyRoom from "./components/StudyRoom";
 import Header from "./components/Header";
