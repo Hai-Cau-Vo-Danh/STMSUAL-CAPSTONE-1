@@ -39,7 +39,11 @@ const Login = ({ onLoginSuccess }) => {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/login", {
+      // ⚠️ SỬA ĐỔI: Sử dụng biến môi trường VITE_BACKEND_URL cho URL API
+      // Nếu VITE_BACKEND_URL không tồn tại (trong môi trường local có proxy), dùng '/api'
+      const API_URL = import.meta.env.VITE_BACKEND_URL || "";
+      
+      const res = await fetch(`${API_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
