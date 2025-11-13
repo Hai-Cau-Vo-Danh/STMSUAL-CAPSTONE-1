@@ -10,8 +10,8 @@ import { useTranslation } from 'react-i18next';
 import axios from 'axios'; 
 import { useNotificationClick } from '../context/NotificationContext'; 
 
-// --- (SỬA LỖI 1) Sửa lỗi double-slash (//api) ---
-const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, '');
+// ⚠️ ĐÃ SỬA: Dùng VITE_BACKEND_URL cho đồng bộ với toàn bộ dự án
+const API_URL = (import.meta.env.VITE_BACKEND_URL || "http://localhost:5000").replace(/\/$/, '');
 
 function Header({ onLogout, isLoggedIn }) { 
   const { t } = useTranslation();
@@ -68,7 +68,6 @@ function Header({ onLogout, isLoggedIn }) {
       setLoadingNotifs(true);
       try {
         const authHeader = { headers: { 'Authorization': `Bearer ${token}` } };
-        // --- (SỬA LỖI 1) Đã sửa API_URL ---
         const res = await axios.get(`${API_URL}/api/notifications`, authHeader); 
         setNotifications(res.data.notifications);
         setNotificationCount(res.data.unread_count);
@@ -147,7 +146,6 @@ function Header({ onLogout, isLoggedIn }) {
 
     try {
       const authHeader = { headers: { 'Authorization': `Bearer ${token}` } };
-      // --- (SỬA LỖI 1) Đã sửa API_URL ---
       await axios.post(`${API_URL}/api/notifications/mark-read`, {}, authHeader);
       setNotificationCount(0);
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
@@ -173,7 +171,7 @@ function Header({ onLogout, isLoggedIn }) {
     return "Vài giây trước";
   };
 
-  // --- (SỬA LỖI 2) Nâng cấp hàm click thông báo ---
+  // --- Nâng cấp hàm click thông báo ---
   const handleNotificationClick = (notif) => {
     setShowNotifications(false);
     
@@ -186,7 +184,7 @@ function Header({ onLogout, isLoggedIn }) {
     else if (notif.type === 'workspace_invite') {
       navigate('/app/workspaces');
     } 
-    // (SỬA LẠI) Cả hai loại này đều trỏ đến workspace
+    // Cả hai loại này đều trỏ đến workspace
     else if (notif.type === 'card_assigned' || notif.type === 'new_card_comment') {
       navigate(`/app/workspace/${notif.reference_id}`);
     } 
@@ -203,13 +201,11 @@ function Header({ onLogout, isLoggedIn }) {
     ) {
       navigate('/app/tasks');
     }
-    
     // Nhóm Admin (không cần click)
     else if (notif.type === 'report_resolved' || notif.type === 'post_deleted_by_admin') {
       // Không làm gì cả
     }
   };
-  // --- KẾT THÚC SỬA ---
 
 
   return (
@@ -219,7 +215,6 @@ function Header({ onLogout, isLoggedIn }) {
       </Link>
 
       <div className="header-center">
-        {/* (Phần Search giữ nguyên) */}
         <div className="header-search">
           <BsSearch className="search-icon" />
           <input 
@@ -252,7 +247,6 @@ function Header({ onLogout, isLoggedIn }) {
       </div>
 
       <div className="header-right">
-        {/* HIỂN THỊ THÔNG BÁO ĐỘNG */}
         <div className="notification-wrapper">
           <button
             className="icon-btn notification-btn"
@@ -289,7 +283,7 @@ function Header({ onLogout, isLoggedIn }) {
                 
                 {!loadingNotifs && notifications.map((notif) => (
                   <div 
-                    key={notif.notification_id} // (SỬA LẠI) Dùng key chuẩn từ DB
+                    key={notif.notification_id} 
                     className={`notification-item ${!notif.is_read ? "unread" : ""}`}
                     onClick={() => handleNotificationClick(notif)} 
                     style={{ cursor: 'pointer' }} 
@@ -305,7 +299,6 @@ function Header({ onLogout, isLoggedIn }) {
           )}
         </div>
         
-        {/* (Phần User Profile giữ nguyên) */}
         <div className="header-user-profile">
           <div
             className="user-profile-toggle"
