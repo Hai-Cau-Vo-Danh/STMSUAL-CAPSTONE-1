@@ -10,6 +10,9 @@ import defaultAvatar from '../assets/Trangchu/avt.png';
 import { useNotificationClick } from '../context/NotificationContext'; 
 // --- (KẾT THÚC CODE MỚI) ---
 
+// ⚠️ ĐỊNH NGHĨA BIẾN API_BASE Ở NGOÀI COMPONENT
+const API_BASE = import.meta.env.VITE_BACKEND_URL || '';
+
 const Forum = () => {
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState('');
@@ -34,12 +37,13 @@ const Forum = () => {
   const user = JSON.parse(localStorage.getItem('user'));
   const userAvatar = user?.avatar_url || defaultAvatar;
 
-  // 1. Fetch tất cả posts (giữ nguyên)
+  // 1. Fetch tất cả posts (ĐÃ SỬA URL)
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        const res = await fetch('http://localhost:5000/api/posts', {
+        // 1. SỬ DỤNG API_BASE
+        const res = await fetch(`${API_BASE}/api/posts`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('Không thể tải bài đăng');
@@ -54,7 +58,7 @@ const Forum = () => {
     fetchPosts();
   }, [token]);
 
-  // 2. Xử lý đăng bài mới (giữ nguyên)
+  // 2. Xử lý đăng bài mới (ĐÃ SỬA URL)
   const handleCreatePost = async (e) => {
     e.preventDefault();
     if (!content.trim()) {
@@ -69,7 +73,8 @@ const Forum = () => {
       formData.append('image_file', imageFile);
     }
     try {
-      const res = await fetch('http://localhost:5000/api/posts', {
+      // 2. SỬ DỤNG API_BASE
+      const res = await fetch(`${API_BASE}/api/posts`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -107,19 +112,16 @@ const Forum = () => {
     ));
   }
 
-  // 6. Logic mở/đóng Comment Modal
-  // --- (CODE MỚI) ---
-  // Bọc trong useCallback để không bị gọi lại vô hạn trong useEffect
+  // 6. Logic mở/đóng Comment Modal (giữ nguyên)
   const openCommentModal = useCallback((post) => { 
     setSelectedPost(post); 
     setIsModalOpen(true); 
-  }, []); // Dependencies rỗng vì setIs... là ổn định
+  }, []); 
   
   const closeCommentModal = useCallback(() => { 
     setIsModalOpen(false); 
     setSelectedPost(null); 
   }, []);
-  // --- (KẾT THÚC CODE MỚI) ---
 
   // Logic mở/đóng Report Modal (giữ nguyên)
   const openReportModal = (post) => {
@@ -135,27 +137,34 @@ const Forum = () => {
   // --- (CODE MỚI) ---
   // useEffect này "lắng nghe" sự thay đổi từ Context
   useEffect(() => {
-    // Chỉ chạy khi:
-    // 1. Có thông báo trong context
-    // 2. Loại thông báo là 'new_comment'
-    // 3. Danh sách 'posts' đã được tải về
     if (notificationToOpen && notificationToOpen.type === 'new_comment' && posts.length > 0) {
       
-      // Tìm bài post tương ứng với ID từ thông báo
       const postToOpen = posts.find(p => p.id === notificationToOpen.postId);
 
       if (postToOpen) {
-        // Nếu tìm thấy post, mở modal bình luận cho post đó
         openCommentModal(postToOpen);
       } else {
-        // Nếu không tìm thấy (ví dụ: post quá cũ, không nằm trong feed)
         console.warn(`Không tìm thấy Post ID ${notificationToOpen.postId} trong feed hiện tại.`);
+        
+        // 3. FETCH RIÊNG POST NẾU KHÔNG CÓ TRONG FEED (ĐÃ SỬA URL)
+        const fetchSinglePost = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/posts/${notificationToOpen.postId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error('Không thể tải bài đăng');
+                const singlePost = await res.json();
+                openCommentModal(singlePost);
+            } catch (err) {
+                console.error("Lỗi khi fetch post riêng lẻ:", err.message);
+            }
+        };
+        fetchSinglePost();
       }
       
-      // Xóa thông báo khỏi context để tránh bị mở lại khi re-render
       clearNotification();
     }
-  }, [notificationToOpen, posts, openCommentModal, clearNotification]); // Dependencies
+  }, [notificationToOpen, posts, openCommentModal, clearNotification, token]);
   // --- (KẾT THÚC CODE MỚI) ---
 
 
@@ -211,7 +220,7 @@ const Forum = () => {
         <CommentModal 
           post={selectedPost}
           token={token}
-          onClose={closeCommentModal} // <-- Dùng hàm đã được useCallback
+          onClose={closeCommentModal}
           currentUserAvatar={userAvatar}
           onCommentPosted={handleNewComment}
         />
