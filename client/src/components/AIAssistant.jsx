@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import './AIAssistant.css';
 import aiLogo from '../assets/Trangchu/art8.png';
 
+// ⚠️ ĐỊNH NGHĨA BIẾN API_BASE Ở NGOÀI COMPONENT
+const API_BASE = import.meta.env.VITE_BACKEND_URL || '';
+
 // 👈 THÊM HÀM NÀY: Lấy user_id từ localStorage
 const getUserId = () => {
     try {
@@ -55,7 +58,8 @@ const AIAssistant = () => {
     }
 
     try {
-      const res = await fetch('http://localhost:5000/api/ai-chat', {
+      // ⚠️ SỬA ĐỔI: Sử dụng API_BASE
+      const res = await fetch(`${API_BASE}/api/ai-chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         // 👈 SỬA DÒNG NÀY: Gửi message KÈM user_id
