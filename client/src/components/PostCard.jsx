@@ -1,8 +1,11 @@
 // src/components/PostCard.jsx
 import React, { useState } from 'react';
-import './Forum.css'; // Dùng chung CSS
-import { BsHeartFill, BsChatDots, BsThreeDots, BsFlag } from 'react-icons/bs'; // Thêm BsFlag
-import defaultAvatar from '../assets/Trangchu/avt.png'; // Avatar mèo mặc định
+import './Forum.css'; 
+import { BsHeartFill, BsChatDots, BsThreeDots, BsFlag } from 'react-icons/bs'; 
+import defaultAvatar from '../assets/Trangchu/avt.png'; 
+
+// ⚠️ ĐÃ SỬA: Định nghĩa API_BASE từ biến môi trường
+const API_BASE = import.meta.env.VITE_BACKEND_URL || '';
 
 // (Component Reaction Picker giữ nguyên)
 const ReactionPicker = ({ onSelect, onMouseLeave }) => {
@@ -59,7 +62,7 @@ const ReactionCounts = ({ counts }) => {
 
 
 // ===== Component PostCard Chính (Đã cập nhật) =====
-const PostCard = ({ post, token, onReactionUpdate, onOpenCommentModal, onOpenReportModal }) => { // (MỚI) Thêm prop onOpenReportModal
+const PostCard = ({ post, token, onReactionUpdate, onOpenCommentModal, onOpenReportModal }) => { 
   const [loadingReaction, setLoadingReaction] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const authorAvatar = post.author.avatar_url || defaultAvatar;
@@ -71,7 +74,8 @@ const PostCard = ({ post, token, onReactionUpdate, onOpenCommentModal, onOpenRep
     setShowPicker(false); 
     const typeToSend = post.user_reaction === reactionType ? null : reactionType;
     try {
-      const res = await fetch(`http://localhost:5000/api/posts/${post.id}/react`, {
+      // ⚠️ ĐÃ SỬA: Sử dụng API_BASE thay vì localhost
+      const res = await fetch(`${API_BASE}/api/posts/${post.id}/react`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ reaction_type: typeToSend })
@@ -102,7 +106,7 @@ const PostCard = ({ post, token, onReactionUpdate, onOpenCommentModal, onOpenRep
       <div className="post-header">
         <img src={authorAvatar} alt="Author Avatar" className="post-author-avatar" />
         <div className="post-author-info">
-          {/* --- (CODE SỬA) Hiển thị tên màu và danh hiệu --- */}
+          {/* Hiển thị tên màu và danh hiệu */}
           <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
             <span 
               className="post-author-name" 
@@ -111,7 +115,7 @@ const PostCard = ({ post, token, onReactionUpdate, onOpenCommentModal, onOpenRep
               {post.author.username}
             </span>
             
-            {/* Hiển thị Rank Title (Vô Địch/Á Quân...) */}
+            {/* Hiển thị Rank Title */}
             {post.author.rank_title && (
               <span className={`rank-badge ${
                   post.author.rank_title.includes('Vô Địch') ? 'top-1' : 
@@ -121,7 +125,7 @@ const PostCard = ({ post, token, onReactionUpdate, onOpenCommentModal, onOpenRep
               </span>
             )}
 
-            {/* Hiển thị Title (Học Bá...) */}
+            {/* Hiển thị Title */}
             {post.author.equipped_title && (
               <span style={{
                 fontSize: '0.7em',
@@ -135,11 +139,10 @@ const PostCard = ({ post, token, onReactionUpdate, onOpenCommentModal, onOpenRep
               </span>
             )}
           </div>
-          {/* --- KẾT THÚC SỬA --- */}
           
           <span className="post-time">{postTime}</span>
         </div>
-        {/* --- (CODE MỚI) Nút Báo cáo --- */}
+        {/* Nút Báo cáo */}
         <button className="post-options-btn post-report-btn" title="Báo cáo bài viết" onClick={() => onOpenReportModal(post)}>
           <BsFlag />
         </button>
