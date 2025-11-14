@@ -4295,7 +4295,7 @@ def update_admin_user(user_id):
         if db:
             db.close()
 
-# ✅ API 5: Xóa User
+# ✅ API 5: Xóa User (ĐÃ SỬA LỖI FOREIGN KEY)
 @app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
 @admin_required
 def delete_admin_user(user_id):
@@ -4306,13 +4306,50 @@ def delete_admin_user(user_id):
         if not user:
             return jsonify({"message": "User không tồn tại"}), 404
         
+        # --- 🧹 DỌN DẸP DỮ LIỆU LIÊN QUAN TRƯỚC KHI XÓA USER 🧹 ---
+        # Vì Database có ràng buộc NOT NULL, ta phải xóa các dữ liệu con trước
+        
+        # 1. Xóa Notes
+        db.query(Note).filter(Note.creator_id == user_id).delete()
+        
+        # 2. Xóa Tasks cá nhân
+        db.query(Task).filter(Task.creator_id == user_id).delete()
+        
+        # 3. Xóa Posts, Comments, Reactions (Forum)
+        db.query(Comment).filter(Comment.user_id == user_id).delete()
+        db.query(Reaction).filter(Reaction.user_id == user_id).delete()
+        # (Với Post, cần cẩn thận vì Post có thể có Comment của người khác)
+        # Cách đơn giản nhất là xóa luôn Post của user này
+        db.query(Post).filter(Post.user_id == user_id).delete()
+        
+        # 4. Xóa Lịch sử & Thống kê
+        db.query(PomodoroSession).filter(PomodoroSession.user_id == user_id).delete()
+        db.query(UserCheckIn).filter(UserCheckIn.user_id == user_id).delete()
+        db.query(UserRoomHistory).filter(UserRoomHistory.user_id == user_id).delete()
+        db.query(Notification).filter(Notification.user_id == user_id).delete()
+        db.query(UserItem).filter(UserItem.user_id == user_id).delete() # Xóa đồ trong kho
+        
+        # 5. Xóa thành viên khỏi các Workspace
+        db.query(WorkspaceMember).filter(WorkspaceMember.user_id == user_id).delete()
+        
+        # 6. Xử lý Workspaces mà User là CHỦ SỞ HỮU (Owner)
+        # Nếu xóa Owner, Workspace đó cũng nên bị xóa (hoặc chuyển quyền)
+        # Ở đây ta chọn cách xóa Workspace để sạch dữ liệu
+        owned_workspaces = db.query(Workspace).filter(Workspace.owner_id == user_id).all()
+        for ws in owned_workspaces:
+            db.delete(ws) # SQLAlchemy sẽ tự cascade xóa boards/lists/cards nếu model chuẩn
+            
+        # -----------------------------------------------------------
+        
+        # Cuối cùng: Xóa User
         db.delete(user)
         db.commit()
-        return jsonify({"message": f"Đã xóa User ID {user_id}"}), 200
+        
+        return jsonify({"message": f"Đã xóa User ID {user_id} và toàn bộ dữ liệu liên quan."}), 200
+
     except Exception as e:
         if db: db.rollback()
         traceback.print_exc()
-        # Lỗi khóa ngoại (foreign key) có thể xảy ra nếu user này là owner của workspace
         return jsonify({"message": f"Lỗi server khi xóa user: {str(e)}"}), 500
     finally:
         if db:
