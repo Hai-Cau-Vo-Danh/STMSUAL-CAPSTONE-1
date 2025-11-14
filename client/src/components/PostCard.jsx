@@ -61,20 +61,19 @@ const ReactionCounts = ({ counts }) => {
 };
 
 
-// ===== Component PostCard Chính (Đã cập nhật) =====
+// ===== Component PostCard Chính =====
 const PostCard = ({ post, token, onReactionUpdate, onOpenCommentModal, onOpenReportModal }) => { 
   const [loadingReaction, setLoadingReaction] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const authorAvatar = post.author.avatar_url || defaultAvatar;
 
-  // 1. (ĐÃ SỬA) Xử lý khi chọn 1 reaction
+  // Xử lý khi chọn 1 reaction
   const handleReactionSelect = async (reactionType) => {
     if (loadingReaction) return;
     setLoadingReaction(true);
     setShowPicker(false); 
     const typeToSend = post.user_reaction === reactionType ? null : reactionType;
     try {
-      // ⚠️ ĐÃ SỬA: Sử dụng API_BASE thay vì localhost
       const res = await fetch(`${API_BASE}/api/posts/${post.id}/react`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -90,42 +89,76 @@ const PostCard = ({ post, token, onReactionUpdate, onOpenCommentModal, onOpenRep
     }
   };
   
-  // 2. Xử lý khi nhấn nút "Thích" (để toggle like)
   const handleLikeButtonClick = () => { handleReactionSelect('like'); }
   
-  // 3. Xử lý hover/unhover
   let timer;
   const handleMouseEnter = () => { clearTimeout(timer); setShowPicker(true); }
   const handleMouseLeave = () => { timer = setTimeout(() => { setShowPicker(false); }, 500); }
 
-  // Format thời gian
   const postTime = new Date(post.created_at).toLocaleString('vi-VN');
 
   return (
     <div className="post-card">
       <div className="post-header">
-        <img src={authorAvatar} alt="Author Avatar" className="post-author-avatar" />
+        {/* --- (SỬA ĐỔI) Wrapper cho Avatar + Khung --- */}
+        <div className="post-avatar-wrapper" style={{ position: 'relative', display: 'inline-block', marginRight: '12px' }}>
+            {/* Avatar Gốc */}
+            <img 
+                src={authorAvatar} 
+                alt="Author Avatar" 
+                className="post-author-avatar" 
+                style={{ display: 'block', width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+            />
+            
+            {/* Khung Avatar (Nếu có) */}
+            {post.author.equipped_frame_url && (
+                <img 
+                    src={post.author.equipped_frame_url} 
+                    alt="Frame" 
+                    className="avatar-frame" 
+                    style={{
+                        position: 'absolute',
+                        top: '-15%',    // Căn chỉnh khung to hơn avatar một chút
+                        left: '-15%',
+                        width: '130%',  // Khung thường lớn hơn avatar 30%
+                        height: '130%',
+                        pointerEvents: 'none', // Để click xuyên qua vào avatar
+                        zIndex: 1
+                    }}
+                />
+            )}
+        </div>
+        {/* --- (KẾT THÚC SỬA ĐỔI) --- */}
+
         <div className="post-author-info">
-          {/* Hiển thị tên màu và danh hiệu */}
-          <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+          {/* Tên màu và Danh hiệu */}
+          <div style={{display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap'}}>
             <span 
               className="post-author-name" 
-              style={{ color: post.author.equipped_name_color || 'var(--text-color)' }}
+              style={{ 
+                  color: post.author.equipped_name_color || 'var(--text-color)',
+                  fontWeight: '600',
+                  fontSize: '1rem'
+              }}
             >
               {post.author.username}
             </span>
             
-            {/* Hiển thị Rank Title */}
+            {/* Rank Title */}
             {post.author.rank_title && (
               <span className={`rank-badge ${
                   post.author.rank_title.includes('Vô Địch') ? 'top-1' : 
                   post.author.rank_title.includes('Á Quân') ? 'top-2' : 'top-3'
-              }`} style={{fontSize: '0.6em', padding: '2px 6px', borderRadius: '8px', color: 'white', fontWeight: 'bold', background: post.author.rank_title.includes('Vô Địch') ? '#FFD700' : '#C0C0C0'}}>
+              }`} style={{
+                  fontSize: '0.6em', padding: '2px 6px', borderRadius: '8px', color: 'white', fontWeight: 'bold', 
+                  background: post.author.rank_title.includes('Vô Địch') ? '#FFD700' : '#C0C0C0',
+                  whiteSpace: 'nowrap'
+              }}>
                   {post.author.rank_title}
               </span>
             )}
 
-            {/* Hiển thị Title */}
+            {/* Equipped Title */}
             {post.author.equipped_title && (
               <span style={{
                 fontSize: '0.7em',
@@ -133,7 +166,8 @@ const PostCard = ({ post, token, onReactionUpdate, onOpenCommentModal, onOpenRep
                 color: 'white',
                 padding: '1px 6px',
                 borderRadius: '10px',
-                fontWeight: 'normal'
+                fontWeight: 'normal',
+                whiteSpace: 'nowrap'
               }}>
                 {post.author.equipped_title}
               </span>
@@ -142,6 +176,7 @@ const PostCard = ({ post, token, onReactionUpdate, onOpenCommentModal, onOpenRep
           
           <span className="post-time">{postTime}</span>
         </div>
+        
         {/* Nút Báo cáo */}
         <button className="post-options-btn post-report-btn" title="Báo cáo bài viết" onClick={() => onOpenReportModal(post)}>
           <BsFlag />
