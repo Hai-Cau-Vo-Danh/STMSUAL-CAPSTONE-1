@@ -3126,7 +3126,8 @@ def get_posts():
                     # --- (THÊM MỚI) Các thông tin trang bị ---
                     "equipped_name_color": post.user.equipped_name_color,
                     "equipped_title": post.user.equipped_title,
-                    "rank_title": post.user.rank_title # <--- QUAN TRỌNG: Danh hiệu xếp hạng
+                    "rank_title": post.user.rank_title,
+                    "equipped_frame_url": post.user.equipped_frame_url
                     # ----------------------------------------
                 }
             })
