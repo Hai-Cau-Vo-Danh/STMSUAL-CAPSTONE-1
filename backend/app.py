@@ -5191,11 +5191,14 @@ def seed_shop_items():
             ShopItem(name="Tên Xanh Neon", type="name_color", price=40, value="#00FF7F", description="Hiện đại.", image_url=None),
             ShopItem(name="Danh hiệu: Học Bá", type="title", price=100, value="Học Bá", description="Chứng nhận chăm chỉ.", image_url=None),
             ShopItem(name="Danh hiệu: Chúa tể Focus", type="title", price=200, value="Chúa tể Focus", description="Tập trung cao độ.", image_url=None),
+            ShopItem(name="Danh hiệu: Bậc thầy Project", type="title", price=400, value="Bậc thầy Project", description="Kiểm soát 100% dự án.", image_url=None),
             
             # KHUNG ẢNH CHUẨN
             ShopItem(name="Khung Lửa Thiêng", type="frame", price=150, value="/frames/gold-frame.png", description="Khung rực lửa.", image_url="/frames/gold-frame.png"),
             ShopItem(name="Khung Hoàng Kim", type="frame", price=300, value="/frames/gold-frame.png", description="Sang trọng quý phái.", image_url="/frames/gold-frame.png"),
-            ShopItem(name="Khung Băng Giá", type="frame", price=120, value="/frames/green-frame.png", description="Mát lạnh.", image_url="/frames/green-frame.png")
+            ShopItem(name="Khung Băng Giá", type="frame", price=120, value="/frames/ice-frame.png", description="Mát lạnh.", image_url="/frames/ice-frame.png"),
+            ShopItem(name="Khung Hoa Tím", type="frame", price=190, value="/frames/flower-frame.png", description="Mát lạnh.", image_url="/frames/flower-frame.png"),
+            ShopItem(name="Khung Thủy Mặc", type="frame", price=99, value="/frames/black-frame.png", description="Mát lạnh.", image_url="/frames/black-frame.png")
         ]
         
         db.add_all(items)
