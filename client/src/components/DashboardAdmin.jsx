@@ -9,7 +9,8 @@ import {
 import { IoClose } from 'react-icons/io5';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+// ⚠️ ĐÃ SỬA: Dùng VITE_BACKEND_URL thay vì localhost
+const API_URL = (import.meta.env.VITE_BACKEND_URL || "http://localhost:5000").replace(/\/$/, '');
 
 // =========================================
 // 1. SIDEBAR COMPONENT
@@ -17,7 +18,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const AdminSidebar = ({ onLogout, activeView, setActiveView }) => {
   return (
     <aside className="admin-sidebar">
-      <div className="admin-sidebar-header"> {/* Sửa lại class cho khớp CSS */}
+      <div className="admin-sidebar-header"> 
         <span className="admin-logo">STMSU-AI</span>
         <span className="admin-title">Control Center</span>
       </div>
@@ -37,7 +38,7 @@ const AdminSidebar = ({ onLogout, activeView, setActiveView }) => {
         </li>
       </ul>
 
-      <div className="admin-sidebar-footer"> {/* Sửa lại class cho khớp CSS */}
+      <div className="admin-sidebar-footer"> 
         <button className="admin-logout-btn" onClick={onLogout}>
           <BsBoxArrowRight size={20} /> <span>Thoát hệ thống</span>
         </button>
