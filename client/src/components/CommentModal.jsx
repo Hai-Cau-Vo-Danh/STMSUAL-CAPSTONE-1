@@ -4,6 +4,9 @@ import './Forum.css'; // Dùng chung CSS
 import { BsX, BsSend } from 'react-icons/bs';
 import defaultAvatar from '../assets/Trangchu/avt.png'; // Avatar mèo mặc định
 
+// ⚠️ ĐÃ SỬA: Định nghĩa API_BASE từ biến môi trường
+const API_BASE = import.meta.env.VITE_BACKEND_URL || '';
+
 const CommentModal = ({ post, token, onClose, currentUserAvatar, onCommentPosted }) => {
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -16,7 +19,8 @@ const CommentModal = ({ post, token, onClose, currentUserAvatar, onCommentPosted
     const fetchComments = async () => {
       setLoadingComments(true);
       try {
-        const res = await fetch(`http://localhost:5000/api/posts/${post.id}/comments`, {
+        // ⚠️ ĐÃ SỬA: Sử dụng API_BASE
+        const res = await fetch(`${API_BASE}/api/posts/${post.id}/comments`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('Không thể tải bình luận');
@@ -45,7 +49,8 @@ const CommentModal = ({ post, token, onClose, currentUserAvatar, onCommentPosted
     
     setLoadingCommentPost(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/posts/${post.id}/comments`, {
+      // ⚠️ ĐÃ SỬA: Sử dụng API_BASE
+      const res = await fetch(`${API_BASE}/api/posts/${post.id}/comments`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
