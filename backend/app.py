@@ -89,6 +89,62 @@ Ví dụ:
 
 LUÔN LUÔN CHỈ TRẢ LỜI BẰNG JSON. KHÔNG THÊM BẤT KỲ TEXT NÀO KHÁC.
 """
+def get_email_template(title, username, message_body, button_text=None, button_link=None):
+    """
+    Tạo HTML email chuyên nghiệp, responsive.
+    Màu chủ đạo: #2563eb (Xanh dương hiện đại)
+    """
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{title}</title>
+        <style>
+            /* Reset CSS để hiển thị tốt trên mọi trình duyệt mail */
+            body {{ margin: 0; padding: 0; background-color: #f4f4f5; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }}
+            .container {{ width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }}
+            .header {{ background-color: #2563eb; padding: 30px 20px; text-align: center; }}
+            .header h1 {{ color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 1px; }}
+            .content {{ padding: 40px 30px; color: #333333; line-height: 1.6; }}
+            .greeting {{ font-size: 20px; font-weight: bold; margin-bottom: 20px; color: #111827; }}
+            .button-container {{ text-align: center; margin: 30px 0; }}
+            .btn {{ display: inline-block; background-color: #2563eb; color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 50px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2); transition: background-color 0.3s; }}
+            .btn:hover {{ background-color: #1d4ed8; }}
+            .footer {{ background-color: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb; }}
+            .footer a {{ color: #2563eb; text-decoration: none; }}
+        </style>
+    </head>
+    <body>
+        <div style="padding: 20px 0;">
+            <div class="container">
+                <div class="header">
+                    <h1>STMSUAI</h1>
+                </div>
+                
+                <div class="content">
+                    <div class="greeting">Xin chào {username},</div>
+                    <p>{message_body}</p>
+                    
+                    {f'<div class="button-container"><a href="{button_link}" class="btn">{button_text}</a></div>' if button_link else ''}
+                    
+                    <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">
+                        Nếu nút bấm không hoạt động, hãy copy đường link sau vào trình duyệt:<br>
+                        <a href="{button_link}" style="color: #2563eb; word-break: break-all;">{button_link}</a>
+                    </p>
+                </div>
+
+                <div class="footer">
+                    <p>&copy; 2025 STMSUAI Team. All rights reserved.</p>
+                    <p>Bạn nhận được email này vì đã sử dụng dịch vụ của chúng tôi.<br>
+                    <a href="#">Trung tâm hỗ trợ</a> | <a href="#">Chính sách bảo mật</a></p>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
 
 # (Tất cả các route test, login, register, profile... giữ nguyên)
 
@@ -538,15 +594,22 @@ def forgot_password():
         frontend_url = os.getenv('FRONTEND_URL', 'https://stmsual-capstone-1-nybj.vercel.app').rstrip('/')
         reset_link = f"{frontend_url}/reset-password/{token}"
 
-        # --- GỬI MAIL QUA BREVO API (HTTP POST) ---
-        # Cách này không dùng socket, không bị Eventlet chặn, không bị Render chặn.
-        
+        # --- TẠO NỘI DUNG EMAIL CHUYÊN NGHIỆP ---
+        html_content = get_email_template(
+            title="Đặt lại mật khẩu STMSUAI",
+            username=user.username,
+            message_body="Chúng tôi nhận được yêu cầu khôi phục mật khẩu cho tài khoản của bạn. Để tiếp tục, vui lòng nhấn vào nút bên dưới. Liên kết này sẽ hết hạn sau 1 giờ.",
+            button_text="Đặt Lại Mật Khẩu Ngay",
+            button_link=reset_link
+        )
+
+        # --- CẤU HÌNH GỬI QUA BREVO ---
         url = "https://api.brevo.com/v3/smtp/email"
         
         payload = {
             "sender": {
                 "name": "STMSUAI Support",
-                "email": "minhnt4py@gmail.com"  # ⚠️ QUAN TRỌNG: Phải trùng email đã verify ở Bước 1
+                "email": "minhnt4py@gmail.com"  # Email đã verify trên Brevo
             },
             "to": [
                 {
@@ -554,24 +617,8 @@ def forgot_password():
                     "name": user.username
                 }
             ],
-            "subject": "[STMSUAI] Yêu cầu đặt lại mật khẩu",
-            "htmlContent": f"""
-                <html>
-                    <body>
-                        <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; max-width: 500px;">
-                            <h2 style="color: #2563eb;">Xin chào {user.username},</h2>
-                            <p>Chúng tôi nhận được yêu cầu lấy lại mật khẩu cho tài khoản của bạn.</p>
-                            <p>Vui lòng bấm vào nút bên dưới để đặt lại mật khẩu:</p>
-                            <div style="text-align: center; margin: 30px 0;">
-                                <a href="{reset_link}" style="background-color:#2563eb; color:white; padding:12px 24px; text-decoration:none; border-radius:4px; font-weight: bold;">
-                                    Đặt lại mật khẩu
-                                </a>
-                            </div>
-                            <p style="color: #666; font-size: 12px;">Link này sẽ hết hạn sau 1 giờ. Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
-                        </div>
-                    </body>
-                </html>
-            """
+            "subject": "🔒 [STMSUAI] Hướng dẫn đặt lại mật khẩu",
+            "htmlContent": html_content
         }
         
         headers = {
@@ -585,12 +632,11 @@ def forgot_password():
         # Gửi Request HTTP (An toàn tuyệt đối trên Render)
         response = requests.post(url, json=payload, headers=headers, timeout=10)
         
-        print(f"📡 Brevo Response: {response.status_code} - {response.text}")
+        print(f"📡 Brevo Response: {response.status_code}")
 
         if response.status_code in [200, 201, 202]:
             return jsonify({"message": "Đã gửi link đặt lại mật khẩu."}), 200
         else:
-            # Log lỗi ra để mình biết, nhưng vẫn báo user là thành công (hoặc báo lỗi tùy bạn)
             print(f"❌ Lỗi Brevo: {response.text}")
             return jsonify({"message": "Lỗi gửi mail từ nhà cung cấp."}), 500
 
