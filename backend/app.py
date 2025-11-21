@@ -2931,59 +2931,49 @@ def add_card(workspace_id, list_id):
     finally:
         if db: db.close()     
         
-# (Trong file app.py)
-# THAY THẾ TOÀN BỘ HÀM check_calendar_reminders CŨ BẰNG HÀM NÀY (v5):
-
+# --- WORKER NHẮC LỊCH (ĐÃ NÂNG CẤP DÙNG BREVO + GIAO DIỆN ĐẸP) ---
 def check_calendar_reminders(app):
     """
-    Worker (v5 - SỬA LỖI RACE/SKIP) chạy nền để kiểm tra và gửi thông báo + EMAIL.
-    - Đã sửa lỗi "Gap" (khe hở thời gian) bằng cách nhìn lùi 60s.
-    - Dùng cờ 'reminder_sent' để tăng hiệu suất và loại bỏ kiểm tra Notification.
+    Worker chạy nền để kiểm tra và gửi thông báo + EMAIL (qua Brevo).
     """
     WORKER_SLEEP_SECONDS = 60 
     
-    print(f"⏰ Starting Calendar Reminder Worker (v5 - Robust Logic) - Sleep: {WORKER_SLEEP_SECONDS}s", flush=True)
+    print(f"⏰ Starting Calendar Reminder Worker (Brevo Edition) - Sleep: {WORKER_SLEEP_SECONDS}s", flush=True)
     
     while True:
         try:
-            with app.app_context(): # Truy cập app context đã được truyền vào
+            with app.app_context():
                 db: Session = None
                 try: 
                     db = next(get_db()) 
                     
                     now = datetime.now(timezone.utc)
-                    # Nhìn lại quá khứ đúng bằng thời gian ngủ (sleep) để không bỏ lỡ
                     lookback_time = now - timedelta(seconds=WORKER_SLEEP_SECONDS)
                     reminder_window_end = now + timedelta(minutes=15)
 
-                    print(f"Worker (v5) [lúc {now.strftime('%H:%M:%S')} UTC] tìm trong khoảng [{lookback_time.strftime('%H:%M:%S')} đến {reminder_window_end.strftime('%H:%M:%S')}]", flush=True)
-
+                    # Lấy sự kiện sắp diễn ra
                     upcoming_events = db.query(CalendarEvent).options(
                         joinedload(CalendarEvent.user) 
                     ).filter(
-                        # THAY ĐỔI LỚN NHẤT: Bỏ qua kiểm tra Notification
-                        CalendarEvent.reminder_sent == False,        # 1. Chỉ lấy sự kiện CHƯA GỬI
-                        CalendarEvent.start_time > lookback_time,    # 2. Bắt đầu sau lần check TRƯỚC
-                        CalendarEvent.start_time <= reminder_window_end # 3. Bắt đầu trong 15 phút TỚI
+                        CalendarEvent.reminder_sent == False,
+                        CalendarEvent.start_time > lookback_time,
+                        CalendarEvent.start_time <= reminder_window_end
                     ).all()
 
                     if upcoming_events:
-                        print(f"🔔🔔🔔 Worker (v5) TÌM THẤY {len(upcoming_events)} SỰ KIỆN ĐỂ GỬI!", flush=True)
-                    else:
-                        print(f"Worker (v5) không tìm thấy sự kiện nào.", flush=True)
+                        print(f"🔔 Tìm thấy {len(upcoming_events)} sự kiện cần nhắc nhở!", flush=True)
 
                     for event in upcoming_events:
-                        if not event.user:
-                            print(f"⚠️ Bỏ qua Event ID {event.event_id} (không có user)", flush=True)
-                            continue
+                        if not event.user: continue
                             
-                        # Nếu sự kiện tìm thấy: GỬI VÀ ĐÁNH DẤU (Loại bỏ khối 'if not existing_notif:')
                         print(f"--- Đang xử lý Event ID {event.event_id} cho User {event.user.email} ---", flush=True)
                         
-                        # 1. Tạo thông báo TRONG APP
+                        # 1. Tạo thông báo TRONG APP (In-app Notification)
                         local_tz = timezone(timedelta(hours=7)) 
                         local_start_time = event.start_time.astimezone(local_tz)
-                        notif_content = f"Sự kiện '{event.title}' sắp bắt đầu lúc {local_start_time.strftime('%H:%M %d/%m')}"
+                        time_str = local_start_time.strftime('%H:%M %d/%m/%Y')
+                        
+                        notif_content = f"Sự kiện '{event.title}' sắp bắt đầu lúc {time_str}"
                         
                         new_notif = Notification(
                             user_id=event.user_id,
@@ -2993,44 +2983,53 @@ def check_calendar_reminders(app):
                         )
                         db.add(new_notif)
                         
-                        # 2. Gửi thông báo EMAIL
+                        # 2. Gửi EMAIL qua BREVO API (Thay thế SMTP cũ)
                         try:
-                            msg = Message(
-                                subject=f"[STMSUAI] Nhắc nhở: {event.title}",
-                                sender=app.config['MAIL_DEFAULT_SENDER'],
-                                recipients=[event.user.email] 
+                            # Tạo nội dung HTML đẹp
+                            email_html = get_email_template(
+                                title="📅 Nhắc nhở sự kiện",
+                                username=event.user.username,
+                                message_body=f"Bạn có một sự kiện sắp diễn ra:<br><br><b>{event.title}</b><br>Thời gian: <b>{time_str}</b><br><br>Hãy chuẩn bị sẵn sàng nhé!",
+                                button_text="Xem Lịch Trình",
+                                button_link="https://c1se73.vercel.app/app/calendar" # Link tới trang lịch
                             )
-                            # ... (Phần HTML email giữ nguyên) ...
-                            msg.html = f"""
-                            <p>Chào bạn {event.user.username},</p>
-                            <p>Đây là nhắc nhở tự động từ STMSUAI cho sự kiện của bạn:</p>
-                            <p style="font-size: 16px;"><b>Sự kiện:</b> {event.title}</p>
-                            <p style="font-size: 16px;"><b>Bắt đầu lúc:</b> {local_start_time.strftime('%H:%M ngày %d/%m/%Y')}</p>
-                            <br><p>Chúc bạn một ngày làm việc hiệu quả! Đội ngũ STMSUAI - Admin Minh</p>
-                            """
-                            mail.send(msg)
-                            print(f"✅ Đã GỬI EMAIL nhắc nhở cho {event.user.email}", flush=True)
+
+                            # Cấu hình gửi Brevo
+                            brevo_url = "https://api.brevo.com/v3/smtp/email"
+                            brevo_headers = {
+                                "accept": "application/json",
+                                "content-type": "application/json",
+                                "api-key": os.getenv('BREVO_API_KEY')
+                            }
+                            brevo_payload = {
+                                "sender": {"name": "STMSUAI Reminder", "email": "minhnt4py@gmail.com"},
+                                "to": [{"email": event.user.email, "name": event.user.username}],
+                                "subject": f"🔔 [Nhắc nhở] {event.title} sắp bắt đầu",
+                                "htmlContent": email_html
+                            }
+
+                            # Gửi Request
+                            response = requests.post(brevo_url, json=brevo_payload, headers=brevo_headers, timeout=10)
+                            
+                            if response.status_code in [200, 201, 202]:
+                                print(f"✅ Đã gửi email nhắc nhở tới {event.user.email}", flush=True)
+                            else:
+                                print(f"❌ Lỗi gửi Brevo: {response.text}", flush=True)
                             
                         except Exception as mail_err:
-                            print(f"❌ LỖI GỬI EMAIL cho {event.user.email}: {mail_err}", flush=True)
+                            print(f"❌ Lỗi ngoại lệ khi gửi mail: {mail_err}", flush=True)
                             traceback.print_exc()
 
-                        # 3. Đánh dấu sự kiện này là "đã gửi" (RẤT QUAN TRỌNG)
+                        # 3. Đánh dấu đã gửi
                         event.reminder_sent = True
-                        print(f"🚩 Đã đánh dấu 'reminder_sent=True' cho Event ID {event.event_id}", flush=True)
-
                         db.commit() 
-                        print(f"✅ ĐÃ TẠO NHẮC NHỞ (in-app) cho Event ID {event.event_id}", flush=True)
                         
                 except Exception as e:
                     if db: db.rollback()
-                    print(f"❌ Lỗi nghiêm trọng trong Calendar Worker: {e}", flush=True)
-                    traceback.print_exc()
+                    print(f"❌ Lỗi Worker: {e}", flush=True)
                 finally:
                     if db: db.close()
             
-            # 4. Ngủ rồi chạy lại
-            print(f"⏰ Calendar Worker (v5) sleeping for {WORKER_SLEEP_SECONDS} seconds...", flush=True)
             time.sleep(WORKER_SLEEP_SECONDS) 
 
         except KeyboardInterrupt:
