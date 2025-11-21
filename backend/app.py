@@ -501,64 +501,35 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'mot-chuoi-bi-mat-rat-kho-doa
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 
-# ✅ API 1: Gửi link quên mật khẩu (ĐÃ SỬA URL ĐỘNG)
 @app.route('/api/forgot-password', methods=['POST'])
 def forgot_password():
-    data = request.get_json()
-    email = data.get('email')
-
-    if not email:
-        return jsonify({"message": "Vui lòng nhập email!"}), 400
-
-    db = next(get_db())
-    user = db.query(User).filter_by(email=email).first()
-
-    if not user:
-        print(f"Yêu cầu reset mật khẩu cho email không tồn tại: {email}")
-        # Bảo mật: Không nên báo lỗi nếu email không tồn tại để tránh dò quét user
-        return jsonify({"message": "Nếu email tồn tại, link reset sẽ được gửi."}), 200
-
-    token = s.dumps(email, salt='password-reset-salt')
+    # ... (Phần kiểm tra user, tạo token, tạo reset_link GIỮ NGUYÊN) ...
     
-    # ⚠️ SỬA ĐỔI QUAN TRỌNG: Lấy URL từ biến môi trường FRONTEND_URL
-    # Nếu không có biến này (chạy local), nó sẽ tự lấy localhost:5173
-    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
-    
-    # Loại bỏ dấu gạch chéo cuối cùng nếu có để tránh link bị lỗi (vd: .com//reset...)
-    if frontend_url.endswith('/'):
-        frontend_url = frontend_url[:-1]
-        
-    reset_link = f"{frontend_url}/reset-password/{token}"
+    # Đoạn tạo msg GIỮ NGUYÊN
+    msg = Message(
+        subject="[STMSUAI] Yêu cầu đặt lại mật khẩu",
+        sender=app.config['MAIL_DEFAULT_SENDER'],
+        recipients=[email]
+    )
+    msg.html = f"""
+    <p>Chào bạn {user.username},</p>
+    <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu...</p>
+    <a href="{reset_link}" ...>Đặt lại mật khẩu</a>
+    ...
+    """
 
+    # 👇 SỬA ĐOẠN GỬI MAIL THÀNH BACKGROUND TASK
     try:
-        msg = Message(
-            subject="[STMSUAI] Yêu cầu đặt lại mật khẩu",
-            sender=app.config['MAIL_DEFAULT_SENDER'],
-            recipients=[email]
-        )
-        msg.html = f"""
-        <p>Chào bạn {user.username},</p>
-        <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.</p>
-        <p>Vui lòng nhấp vào link dưới đây để đặt lại mật khẩu. Link này sẽ hết hạn sau 1 giờ.</p>
-        <a href="{reset_link}" 
-           style="background-color: #007bff; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; display: inline-block;">
-           Đặt lại mật khẩu
-        </a>
-        <p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
-        <p>Trân trọng,<br>Đội ngũ STMSUAI - Admin Minh</p>
-        """
-        mail.send(msg)
-        print(f"✅ Đã gửi mail reset tới: {email}")
-        return jsonify({"message": "Đã gửi link đặt lại mật khẩu qua email."}), 200
+        # Thay vì mail.send(msg), ta dùng socketio để chạy ngầm
+        socketio.start_background_task(send_async_email, app, msg)
+        
+        # Trả về thành công ngay lập tức, không chờ mail gửi xong
+        return jsonify({"message": "Đang gửi link đặt lại mật khẩu..."}), 200
     except Exception as e:
-        print(f"❌ Lỗi gửi mail: {e}")
-        # In traceback để debug trên Render Logs
-        traceback.print_exc()
-        return jsonify({"message": f"Lỗi máy chủ khi gửi mail: {str(e)}"}), 500
+        print(f"❌ Lỗi khởi tạo task gửi mail: {e}")
+        return jsonify({"message": f"Lỗi server: {str(e)}"}), 500
     finally:
-        # Đảm bảo đóng DB session dù có lỗi hay không
-        if db:
-            db.close()
+        if db: db.close()
 
 # ✅ API 2: Xử lý reset mật khẩu
 @app.route('/api/reset-password', methods=['POST'])
