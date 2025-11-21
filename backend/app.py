@@ -529,38 +529,74 @@ def forgot_password():
     db = next(get_db())
     try:
         user = db.query(User).filter_by(email=email).first()
-        # Giả vờ thành công để bảo mật nếu không tìm thấy user
         if not user:
-            return jsonify({"message": "Đã gửi link đặt lại mật khẩu."}), 200
+            # Fake thành công để bảo mật
+            return jsonify({"message": "Đã gửi link (nếu email tồn tại)."}), 200
 
+        # Tạo token và link reset
         token = s.dumps(email, salt='password-reset-salt')
-        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173').rstrip('/')
+        frontend_url = os.getenv('FRONTEND_URL', 'https://stmsual-capstone-1-nybj.vercel.app').rstrip('/')
         reset_link = f"{frontend_url}/reset-password/{token}"
 
-        # --- GỬI MAIL BẰNG RESEND API (HTTP) ---
-        print(f"🚀 Đang gửi mail qua Resend API tới {email}...")
+        # --- GỬI MAIL QUA BREVO API (HTTP POST) ---
+        # Cách này không dùng socket, không bị Eventlet chặn, không bị Render chặn.
         
-        r = resend.Emails.send({
-            "from": "STMSUAI <onboarding@resend.dev>", # Dùng mail mặc định của Resend
-            "to": email, # Lưu ý: Chỉ gửi được cho chính bạn nếu chưa add domain
-            "subject": "[STMSUAI] Đặt lại mật khẩu",
-            "html": f"""
-            <div style="font-family: sans-serif; padding: 20px;">
-                <h2>Xin chào {user.username},</h2>
-                <p>Bấm vào nút dưới đây để đặt lại mật khẩu (Hết hạn sau 1h):</p>
-                <a href="{reset_link}" style="background:#007bff;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">
-                    Đặt lại mật khẩu
-                </a>
-            </div>
+        url = "https://api.brevo.com/v3/smtp/email"
+        
+        payload = {
+            "sender": {
+                "name": "STMSUAI Support",
+                "email": "minhnt4py@gmail.com"  # ⚠️ QUAN TRỌNG: Phải trùng email đã verify ở Bước 1
+            },
+            "to": [
+                {
+                    "email": email,
+                    "name": user.username
+                }
+            ],
+            "subject": "[STMSUAI] Yêu cầu đặt lại mật khẩu",
+            "htmlContent": f"""
+                <html>
+                    <body>
+                        <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; max-width: 500px;">
+                            <h2 style="color: #2563eb;">Xin chào {user.username},</h2>
+                            <p>Chúng tôi nhận được yêu cầu lấy lại mật khẩu cho tài khoản của bạn.</p>
+                            <p>Vui lòng bấm vào nút bên dưới để đặt lại mật khẩu:</p>
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="{reset_link}" style="background-color:#2563eb; color:white; padding:12px 24px; text-decoration:none; border-radius:4px; font-weight: bold;">
+                                    Đặt lại mật khẩu
+                                </a>
+                            </div>
+                            <p style="color: #666; font-size: 12px;">Link này sẽ hết hạn sau 1 giờ. Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
+                        </div>
+                    </body>
+                </html>
             """
-        })
+        }
         
-        print(f"✅ Kết quả gửi mail: {r}")
-        return jsonify({"message": "Đã gửi link đặt lại mật khẩu."}), 200
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "api-key": os.getenv('BREVO_API_KEY')
+        }
+
+        print(f"🚀 Đang gửi mail qua Brevo tới {email}...")
+        
+        # Gửi Request HTTP (An toàn tuyệt đối trên Render)
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        
+        print(f"📡 Brevo Response: {response.status_code} - {response.text}")
+
+        if response.status_code in [200, 201, 202]:
+            return jsonify({"message": "Đã gửi link đặt lại mật khẩu."}), 200
+        else:
+            # Log lỗi ra để mình biết, nhưng vẫn báo user là thành công (hoặc báo lỗi tùy bạn)
+            print(f"❌ Lỗi Brevo: {response.text}")
+            return jsonify({"message": "Lỗi gửi mail từ nhà cung cấp."}), 500
 
     except Exception as e:
-        print(f"❌ Lỗi gửi mail API: {e}")
-        return jsonify({"message": f"Lỗi server: {str(e)}"}), 500
+        print(f"❌ Lỗi Code: {e}")
+        return jsonify({"message": "Lỗi máy chủ."}), 500
     finally:
         if db: db.close()
 
