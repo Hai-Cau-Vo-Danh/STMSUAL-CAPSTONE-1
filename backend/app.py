@@ -36,6 +36,8 @@ from google.auth.transport import requests as google_requests
 import cloudinary
 import cloudinary.uploader
 from datetime import datetime, timedelta 
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 app = Flask(__name__)
 # (ĐÃ SỬA LỖI) Cho phép CORS cho TẤT CẢ các route (bao gồm /api/ VÀ /socket.io/)
@@ -214,6 +216,82 @@ def login():
          if db:
              db.close() # Đảm bảo đóng session
 
+# ... (Hàm login cũ của bạn ở trên) ...
+
+# ✅ API: Đăng nhập bằng Google (THÊM MỚI VÀO ĐÂY)
+@app.route('/api/google-login', methods=['POST'])
+def google_login():
+    data = request.get_json()
+    token = data.get('token')
+    
+    # Lấy Client ID từ biến môi trường Render
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID") 
+
+    if not token:
+        return jsonify({"message": "Thiếu token Google"}), 400
+    if not GOOGLE_CLIENT_ID:
+        return jsonify({"message": "Server chưa cấu hình GOOGLE_CLIENT_ID"}), 500
+
+    try:
+        # 1. Xác thực token với Google
+        id_info = id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID)
+
+        email = id_info['email']
+        name = id_info.get('name', 'Google User')
+        picture = id_info.get('picture')
+
+        db = next(get_db())
+        
+        # 2. Kiểm tra xem user đã tồn tại chưa
+        user = db.query(User).filter(User.email == email).first()
+
+        if not user:
+            # 3. Nếu chưa có -> Tự động đăng ký
+            import secrets
+            random_pass = secrets.token_hex(16) # Tạo mật khẩu ngẫu nhiên an toàn
+            hashed_pw = generate_password_hash(random_pass)
+            
+            user = User(
+                username=name, 
+                email=email,
+                password_hash=hashed_pw,
+                avatar_url=picture, # Lấy luôn avatar Google
+                role='user'
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        
+        # 4. Tạo JWT Token (Giống hệt hàm login thường của bạn)
+        payload = {
+            'user_id': user.user_id,
+            'email': user.email,
+            'role': user.role,
+            'exp': datetime.now(timezone.utc) + timedelta(days=1)
+        }
+        secret_key = app.config['SECRET_KEY']
+        system_token = jwt.encode(payload, secret_key, algorithm="HS256")
+
+        # 5. Trả về kết quả
+        return jsonify({
+            "message": "Đăng nhập Google thành công!",
+            "user": {
+                "user_id": user.user_id,
+                "username": user.username,
+                "email": user.email,
+                "avatar_url": user.avatar_url,
+                "role": user.role
+            },
+            "token": system_token
+        }), 200
+
+    except ValueError:
+        return jsonify({"message": "Token Google không hợp lệ"}), 400
+    except Exception as e:
+        print(f"Lỗi Google Login: {e}")
+        return jsonify({"message": "Lỗi server khi đăng nhập Google"}), 500
+    finally:
+        if db: db.close()
 
 # ✅ API: Đăng nhập bằng Google
 @app.route('/api/google-login', methods=['POST'])
