@@ -1,5 +1,6 @@
 import psycopg2 # <-- (SỬA LỖI) THÊM DÒNG NÀY LÊN ĐẦU TIÊN
 import eventlet 
+from eventlet import tpool
 eventlet.monkey_patch() 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -486,16 +487,26 @@ app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
 
 mail = Mail(app)
 
-def send_async_email(app_instance, msg):
-    """Gửi email trong background task để tránh bị Eventlet chặn."""
+# --- HÀM GỬI MAIL MỚI (DÙNG TPOOL) ---
+
+def execute_mail_in_thread(app_instance, msg):
+    """Hàm này sẽ chạy trong một Thread thật (Native Thread) để né Eventlet."""
     with app_instance.app_context():
-        try:
-            mail.send(msg)
-            print(f"✅ Email đã gửi thành công tới: {msg.recipients}")
-        except Exception as e:
-            print(f"❌ Lỗi gửi email async: {e}")
-            import traceback
-            traceback.print_exc()
+        mail.send(msg)
+
+def send_async_email(app_instance, msg):
+    """Wrapper để đẩy việc gửi mail vào tpool."""
+    try:
+        # tpool.execute sẽ khóa thread này cho đến khi gửi xong, 
+        # nhưng vì nó chạy trong background task của socketio nên không ảnh hưởng server chính.
+        tpool.execute(execute_mail_in_thread, app_instance, msg)
+        print(f"✅ [tpool] Email đã gửi thành công tới: {msg.recipients}")
+    except Exception as e:
+        print(f"❌ Lỗi gửi email (tpool): {e}")
+        import traceback
+        traceback.print_exc()
+
+# ---------------------------------------
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'mot-chuoi-bi-mat-rat-kho-doan-abc123')
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
