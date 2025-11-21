@@ -1,15 +1,14 @@
 import eventlet
-# ⚠️ QUAN TRỌNG: KHÔNG GỌI eventlet.monkey_patch() Ở ĐÂY!
-# Gunicorn worker 'eventlet' đã tự làm việc này rồi. 
-# Nếu gọi lại ở đây sẽ gây lỗi "blocking functions" làm sập server.
 
-# Chỉ patch riêng cho PostgreSQL (để DB không chặn Socket)
+# 1. KHÔNG gọi eventlet.monkey_patch() ở đây (để tránh lỗi RuntimeError ở Master)
+# Gunicorn worker đã tự làm việc này rồi.
+
+# 2. Patch Psycopg2 ngay lập tức (để tránh lỗi RLock và Database treo)
 try:
     from eventlet.support import psycopg2_patcher
     psycopg2_patcher.make_psycopg_green()
 except ImportError:
     pass
-import psycopg2    
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
