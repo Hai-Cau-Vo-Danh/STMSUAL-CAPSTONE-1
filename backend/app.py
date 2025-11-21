@@ -4,6 +4,7 @@ from eventlet import tpool
 eventlet.monkey_patch() 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import resend
 import os
 import jwt
 import threading
@@ -53,6 +54,7 @@ cloudinary.config(cloudinary_url=os.getenv("CLOUDINARY_URL"), secure=True)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 MODEL_NAME = "gemini-2.5-flash" 
+resend.api_key = os.getenv('RESEND_API_KEY')
 
 # --- DỮ LIỆU HUẤN LUYỆN AI (Giữ nguyên) ---
 AI_KNOWLEDGE = """
@@ -519,9 +521,7 @@ s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 @app.route('/api/forgot-password', methods=['POST'])
 def forgot_password():
     data = request.get_json()
-    
-    # ✅ KHAI BÁO BIẾN email RÕ RÀNG Ở ĐÂY
-    email = data.get('email') 
+    email = data.get('email')
 
     if not email:
         return jsonify({"message": "Vui lòng nhập email!"}), 400
@@ -529,42 +529,37 @@ def forgot_password():
     db = next(get_db())
     try:
         user = db.query(User).filter_by(email=email).first()
-
+        # Giả vờ thành công để bảo mật nếu không tìm thấy user
         if not user:
-            # Bảo mật: Không báo lỗi nếu email sai để tránh dò user
-            return jsonify({"message": "Đang gửi link đặt lại mật khẩu..."}), 200
+            return jsonify({"message": "Đã gửi link đặt lại mật khẩu."}), 200
 
         token = s.dumps(email, salt='password-reset-salt')
-        
-        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
-        if frontend_url.endswith('/'):
-            frontend_url = frontend_url[:-1]
-            
+        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173').rstrip('/')
         reset_link = f"{frontend_url}/reset-password/{token}"
 
-        msg = Message(
-            subject="[STMSUAI] Yêu cầu đặt lại mật khẩu",
-            sender=app.config['MAIL_DEFAULT_SENDER'],
-            recipients=[email] # ✅ Biến 'email' giờ đã được định nghĩa ở dòng đầu hàm
-        )
+        # --- GỬI MAIL BẰNG RESEND API (HTTP) ---
+        print(f"🚀 Đang gửi mail qua Resend API tới {email}...")
         
-        msg.html = f"""
-        <p>Chào bạn {user.username},</p>
-        <p>Vui lòng nhấp vào link dưới đây để đặt lại mật khẩu:</p>
-        <a href="{reset_link}" style="background:#007bff;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;">
-            Đặt lại mật khẩu
-        </a>
-        <p>Link này sẽ hết hạn sau 1 giờ.</p>
-        """
-
-        # Gửi mail bất đồng bộ (Async)
-        socketio.start_background_task(send_async_email, app, msg)
+        r = resend.Emails.send({
+            "from": "STMSUAI <onboarding@resend.dev>", # Dùng mail mặc định của Resend
+            "to": email, # Lưu ý: Chỉ gửi được cho chính bạn nếu chưa add domain
+            "subject": "[STMSUAI] Đặt lại mật khẩu",
+            "html": f"""
+            <div style="font-family: sans-serif; padding: 20px;">
+                <h2>Xin chào {user.username},</h2>
+                <p>Bấm vào nút dưới đây để đặt lại mật khẩu (Hết hạn sau 1h):</p>
+                <a href="{reset_link}" style="background:#007bff;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">
+                    Đặt lại mật khẩu
+                </a>
+            </div>
+            """
+        })
         
-        return jsonify({"message": "Đang gửi link đặt lại mật khẩu..."}), 200
+        print(f"✅ Kết quả gửi mail: {r}")
+        return jsonify({"message": "Đã gửi link đặt lại mật khẩu."}), 200
 
     except Exception as e:
-        print(f"❌ Lỗi API forgot_password: {e}")
-        traceback.print_exc()
+        print(f"❌ Lỗi gửi mail API: {e}")
         return jsonify({"message": f"Lỗi server: {str(e)}"}), 500
     finally:
         if db: db.close()
