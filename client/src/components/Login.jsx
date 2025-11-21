@@ -167,7 +167,7 @@ const Login = ({ onLoginSuccess }) => {
 
             {/* 3. Phần Google Login UI */}
             <div className="divider-or" style={{margin: '20px 0', textAlign: 'center', color: '#888', fontSize: '0.9rem'}}>
-                <span>Hoặc đăng nhập bằng</span>
+                <span>Hoặc</span>
             </div>
             
             <div style={{display: 'flex', justifyContent: 'center', marginBottom: '20px'}}>
