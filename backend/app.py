@@ -464,15 +464,21 @@ from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 import time 
 
-# --- CẤU HÌNH FLASK-MAIL (CẬP NHẬT CHO RENDER) ---
+# --- CẤU HÌNH FLASK-MAIL (CHUẨN HÓA CHO RENDER CỔNG 587) ---
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
 
-# Ưu tiên cổng 465 nếu không có biến môi trường
-app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 465)) 
+# Hàm xử lý boolean an toàn (chấp nhận 'True', 'true', '1', 't')
+def str_to_bool(value):
+    if not value: return False
+    return str(value).lower() in ['true', '1', 't', 'yes']
 
-# Chuyển đổi chuỗi 'True'/'False' từ env thành Boolean
-app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'False').lower() in ['true', '1', 't']
-app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL', 'True').lower() in ['true', '1', 't']
+# Cấu hình TLS/SSL
+app.config['MAIL_USE_TLS'] = str_to_bool(os.getenv('MAIL_USE_TLS', 'True'))
+app.config['MAIL_USE_SSL'] = str_to_bool(os.getenv('MAIL_USE_SSL', 'False'))
+
+# Debug mail để xem lỗi chi tiết trong log Render
+app.config['MAIL_DEBUG'] = str_to_bool(os.getenv('MAIL_DEBUG', 'True'))
 
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
