@@ -474,12 +474,16 @@ def str_to_bool(value):
     if not value: return False
     return str(value).lower() in ['true', '1', 't', 'yes']
 
-# Cấu hình TLS/SSL
-app.config['MAIL_USE_TLS'] = str_to_bool(os.getenv('MAIL_USE_TLS', 'True'))
-app.config['MAIL_USE_SSL'] = str_to_bool(os.getenv('MAIL_USE_SSL', 'False'))
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
 
-# Debug mail để xem lỗi chi tiết trong log Render
-app.config['MAIL_DEBUG'] = str_to_bool(os.getenv('MAIL_DEBUG', 'True'))
+# Hàm xử lý boolean an toàn
+def str_to_bool(value):
+    if not value: return False
+    return str(value).lower() in ['true', '1', 't', 'yes']
+
+app.config['MAIL_USE_TLS'] = str_to_bool(os.getenv('MAIL_USE_TLS', 'True')) # True
+app.config['MAIL_USE_SSL'] = str_to_bool(os.getenv('MAIL_USE_SSL', 'False')) # False
 
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
