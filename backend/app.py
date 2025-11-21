@@ -30,7 +30,8 @@ from DB.models import Post, Comment, Reaction, ReportedPost, Notification
 from sqlalchemy.orm import joinedload
 from datetime import datetime, timedelta, timezone, date
 from functools import wraps
-
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 # THÊM CÁC IMPORT CẦN THIẾT
 import cloudinary
 import cloudinary.uploader
@@ -212,6 +213,81 @@ def login():
     finally:
          if db:
              db.close() # Đảm bảo đóng session
+
+
+# ✅ API: Đăng nhập bằng Google
+@app.route('/api/google-login', methods=['POST'])
+def google_login():
+    data = request.get_json()
+    token = data.get('token')
+    
+    # Thay bằng Client ID của bạn (phải khớp với Frontend)
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID") 
+
+    if not token:
+        return jsonify({"message": "Thiếu token Google"}), 400
+
+    try:
+        # 1. Xác thực token với Google
+        id_info = id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID)
+
+        email = id_info['email']
+        name = id_info.get('name', 'Google User')
+        picture = id_info.get('picture')
+
+        db = next(get_db())
+        
+        # 2. Kiểm tra xem user đã tồn tại chưa
+        user = db.query(User).filter(User.email == email).first()
+
+        if not user:
+            # 3. Nếu chưa có -> Tự động đăng ký
+            # Tạo mật khẩu ngẫu nhiên (vì họ dùng Google nên không cần pass này)
+            import secrets
+            random_pass = secrets.token_hex(16)
+            hashed_pw = generate_password_hash(random_pass)
+            
+            user = User(
+                username=name, # Hoặc lấy email.split('@')[0] để an toàn hơn
+                email=email,
+                password_hash=hashed_pw,
+                avatar_url=picture, # Lấy luôn avatar Google
+                role='user'
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        
+        # 4. Tạo JWT Token (giống hệt hàm login thường)
+        payload = {
+            'user_id': user.user_id,
+            'email': user.email,
+            'role': user.role,
+            'exp': datetime.now(timezone.utc) + timedelta(days=1)
+        }
+        secret_key = app.config['SECRET_KEY']
+        system_token = jwt.encode(payload, secret_key, algorithm="HS256")
+
+        # 5. Trả về kết quả
+        return jsonify({
+            "message": "Đăng nhập Google thành công!",
+            "user": {
+                "user_id": user.user_id,
+                "username": user.username,
+                "email": user.email,
+                "avatar_url": user.avatar_url,
+                "role": user.role
+            },
+            "token": system_token
+        }), 200
+
+    except ValueError:
+        return jsonify({"message": "Token Google không hợp lệ"}), 400
+    except Exception as e:
+        print(f"Lỗi Google Login: {e}")
+        return jsonify({"message": "Lỗi server khi đăng nhập Google"}), 500
+    finally:
+        if db: db.close()             
 
 
 @app.route('/api/ai-chat', methods=['POST'])

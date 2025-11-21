@@ -1,8 +1,11 @@
+// src/components/Login.jsx
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./auth.css";
 import loginArt from "../assets/DangNhap/login-art.png";
-import { BsEnvelope, BsLock, BsArrowLeft, BsExclamationCircle } from "react-icons/bs"; // Thêm icons
+import { BsEnvelope, BsLock, BsArrowLeft, BsExclamationCircle } from "react-icons/bs";
+// 1. Import Google Login Component
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = ({ onLoginSuccess }) => {
   const navigate = useNavigate();
@@ -20,6 +23,7 @@ const Login = ({ onLoginSuccess }) => {
     return re.test(String(email).toLowerCase());
   };
 
+  // Xử lý đăng nhập thường
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -39,8 +43,7 @@ const Login = ({ onLoginSuccess }) => {
     }
 
     try {
-      // ⚠️ SỬA ĐỔI: Sử dụng biến môi trường VITE_BACKEND_URL cho URL API
-      // Nếu VITE_BACKEND_URL không tồn tại (trong môi trường local có proxy), dùng '/api'
+      // Sử dụng biến môi trường
       const API_URL = import.meta.env.VITE_BACKEND_URL || "";
       
       const res = await fetch(`${API_URL}/api/login`, {
@@ -52,10 +55,7 @@ const Login = ({ onLoginSuccess }) => {
       const data = await res.json();
 
       if (res.ok) {
-        localStorage.setItem("role", data.user.role); 
-        localStorage.setItem("user", JSON.stringify(data.user));
-        localStorage.setItem("token", data.token);
-        onLoginSuccess();
+        handleLoginSuccessData(data);
       } else {
         setError(data.message || "Đã xảy ra lỗi");
         setLoading(false);
@@ -65,6 +65,45 @@ const Login = ({ onLoginSuccess }) => {
       setError("Không thể kết nối đến máy chủ!");
       setLoading(false);
     } 
+  };
+
+  // 2. Xử lý Đăng nhập Google thành công
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    setError("");
+    try {
+      const API_URL = import.meta.env.VITE_BACKEND_URL || "";
+      
+      // Gửi token của Google về Backend để xác thực
+      const res = await fetch(`${API_URL}/api/google-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: credentialResponse.credential }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        handleLoginSuccessData(data);
+      } else {
+        setError(data.message || "Đăng nhập Google thất bại");
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Lỗi Google Login:", error);
+      setError("Không thể kết nối đến máy chủ!");
+      setLoading(false);
+    }
+  };
+
+  // Hàm chung để lưu data và chuyển hướng
+  const handleLoginSuccessData = (data) => {
+    localStorage.setItem("role", data.user.role); 
+    localStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.setItem("token", data.token);
+    onLoginSuccess();
+    // Chuyển hướng sau khi đăng nhập thành công (thường là vào dashboard)
+    navigate("/app/dashboard"); 
   };
 
   return (
@@ -125,6 +164,26 @@ const Login = ({ onLoginSuccess }) => {
             <button type="submit" className="auth-btn" disabled={loading}>
               {loading ? "Đang xác thực..." : "Đăng nhập ngay"}
             </button>
+
+            {/* 3. Phần Google Login UI */}
+            <div className="divider-or" style={{margin: '20px 0', textAlign: 'center', color: '#888', fontSize: '0.9rem'}}>
+                <span>Hoặc đăng nhập bằng</span>
+            </div>
+            
+            <div style={{display: 'flex', justifyContent: 'center', marginBottom: '20px'}}>
+                <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => {
+                        setError("Đăng nhập Google thất bại");
+                        setLoading(false);
+                    }}
+                    useOneTap
+                    theme="outline"
+                    shape="pill"
+                    width="100%"
+                    text="signin_with"
+                />
+            </div>
 
             <div className="auth-links" style={{justifyContent: 'center'}}>
               <p>
