@@ -503,30 +503,53 @@ s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 @app.route('/api/forgot-password', methods=['POST'])
 def forgot_password():
-    # ... (Phần kiểm tra user, tạo token, tạo reset_link GIỮ NGUYÊN) ...
+    data = request.get_json()
     
-    # Đoạn tạo msg GIỮ NGUYÊN
-    msg = Message(
-        subject="[STMSUAI] Yêu cầu đặt lại mật khẩu",
-        sender=app.config['MAIL_DEFAULT_SENDER'],
-        recipients=[email]
-    )
-    msg.html = f"""
-    <p>Chào bạn {user.username},</p>
-    <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu...</p>
-    <a href="{reset_link}" ...>Đặt lại mật khẩu</a>
-    ...
-    """
+    # ✅ KHAI BÁO BIẾN email RÕ RÀNG Ở ĐÂY
+    email = data.get('email') 
 
-    # 👇 SỬA ĐOẠN GỬI MAIL THÀNH BACKGROUND TASK
+    if not email:
+        return jsonify({"message": "Vui lòng nhập email!"}), 400
+
+    db = next(get_db())
     try:
-        # Thay vì mail.send(msg), ta dùng socketio để chạy ngầm
+        user = db.query(User).filter_by(email=email).first()
+
+        if not user:
+            # Bảo mật: Không báo lỗi nếu email sai để tránh dò user
+            return jsonify({"message": "Đang gửi link đặt lại mật khẩu..."}), 200
+
+        token = s.dumps(email, salt='password-reset-salt')
+        
+        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+        if frontend_url.endswith('/'):
+            frontend_url = frontend_url[:-1]
+            
+        reset_link = f"{frontend_url}/reset-password/{token}"
+
+        msg = Message(
+            subject="[STMSUAI] Yêu cầu đặt lại mật khẩu",
+            sender=app.config['MAIL_DEFAULT_SENDER'],
+            recipients=[email] # ✅ Biến 'email' giờ đã được định nghĩa ở dòng đầu hàm
+        )
+        
+        msg.html = f"""
+        <p>Chào bạn {user.username},</p>
+        <p>Vui lòng nhấp vào link dưới đây để đặt lại mật khẩu:</p>
+        <a href="{reset_link}" style="background:#007bff;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;">
+            Đặt lại mật khẩu
+        </a>
+        <p>Link này sẽ hết hạn sau 1 giờ.</p>
+        """
+
+        # Gửi mail bất đồng bộ (Async)
         socketio.start_background_task(send_async_email, app, msg)
         
-        # Trả về thành công ngay lập tức, không chờ mail gửi xong
         return jsonify({"message": "Đang gửi link đặt lại mật khẩu..."}), 200
+
     except Exception as e:
-        print(f"❌ Lỗi khởi tạo task gửi mail: {e}")
+        print(f"❌ Lỗi API forgot_password: {e}")
+        traceback.print_exc()
         return jsonify({"message": f"Lỗi server: {str(e)}"}), 500
     finally:
         if db: db.close()
