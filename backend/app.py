@@ -591,7 +591,7 @@ def forgot_password():
 
         # Tạo token và link reset
         token = s.dumps(email, salt='password-reset-salt')
-        frontend_url = os.getenv('FRONTEND_URL', 'https://stmsual-capstone-1-nybj.vercel.app').rstrip('/')
+        frontend_url = os.getenv('FRONTEND_URL', 'https://c1se73.vercel.app').rstrip('/')
         reset_link = f"{frontend_url}/reset-password/{token}"
 
         # --- TẠO NỘI DUNG EMAIL CHUYÊN NGHIỆP ---
