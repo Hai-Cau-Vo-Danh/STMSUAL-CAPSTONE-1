@@ -486,6 +486,17 @@ app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
 
 mail = Mail(app)
 
+def send_async_email(app_instance, msg):
+    """Gửi email trong background task để tránh bị Eventlet chặn."""
+    with app_instance.app_context():
+        try:
+            mail.send(msg)
+            print(f"✅ Email đã gửi thành công tới: {msg.recipients}")
+        except Exception as e:
+            print(f"❌ Lỗi gửi email async: {e}")
+            import traceback
+            traceback.print_exc()
+
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'mot-chuoi-bi-mat-rat-kho-doan-abc123')
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
