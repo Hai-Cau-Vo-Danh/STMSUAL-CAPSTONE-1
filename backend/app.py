@@ -1,19 +1,6 @@
-# 1. Import eventlet chỉ để patch psycopg2
-import eventlet
-
-# ⚠️ QUAN TRỌNG: KHÔNG ĐƯỢC GỌI eventlet.monkey_patch() Ở ĐÂY!
-# Lệnh 'gunicorn -k eventlet' đã tự động làm việc này cho các Worker.
-# Nếu gọi ở đây, nó sẽ phá hỏng Master Process của Gunicorn.
-
-# 2. Patch Psycopg2 để Database hoạt động mượt với SocketIO
-try:
-    from eventlet.support import psycopg2_patcher
-    psycopg2_patcher.make_psycopg_green()
-except ImportError:
-    pass
-
-# 3. Import thư viện Database (phải sau đoạn patch trên)
-import psycopg2
+import psycopg2 # <-- (SỬA LỖI) THÊM DÒNG NÀY LÊN ĐẦU TIÊN
+import eventlet 
+eventlet.monkey_patch() 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
