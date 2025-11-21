@@ -464,10 +464,16 @@ from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 import time 
 
-# --- CẤU HÌNH FLASK-MAIL ---
-app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
-app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+# --- CẤU HÌNH FLASK-MAIL (CẬP NHẬT CHO RENDER) ---
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+
+# Ưu tiên cổng 465 nếu không có biến môi trường
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 465)) 
+
+# Chuyển đổi chuỗi 'True'/'False' từ env thành Boolean
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'False').lower() in ['true', '1', 't']
+app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL', 'True').lower() in ['true', '1', 't']
+
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
@@ -478,7 +484,7 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'mot-chuoi-bi-mat-rat-kho-doa
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 
-# ✅ API 1: Gửi link quên mật khẩu
+# ✅ API 1: Gửi link quên mật khẩu (ĐÃ SỬA URL ĐỘNG)
 @app.route('/api/forgot-password', methods=['POST'])
 def forgot_password():
     data = request.get_json()
@@ -492,10 +498,20 @@ def forgot_password():
 
     if not user:
         print(f"Yêu cầu reset mật khẩu cho email không tồn tại: {email}")
+        # Bảo mật: Không nên báo lỗi nếu email không tồn tại để tránh dò quét user
         return jsonify({"message": "Nếu email tồn tại, link reset sẽ được gửi."}), 200
 
     token = s.dumps(email, salt='password-reset-salt')
-    reset_link = f"http://localhost:5173/reset-password/{token}"
+    
+    # ⚠️ SỬA ĐỔI QUAN TRỌNG: Lấy URL từ biến môi trường FRONTEND_URL
+    # Nếu không có biến này (chạy local), nó sẽ tự lấy localhost:5173
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+    
+    # Loại bỏ dấu gạch chéo cuối cùng nếu có để tránh link bị lỗi (vd: .com//reset...)
+    if frontend_url.endswith('/'):
+        frontend_url = frontend_url[:-1]
+        
+    reset_link = f"{frontend_url}/reset-password/{token}"
 
     try:
         msg = Message(
@@ -515,11 +531,17 @@ def forgot_password():
         <p>Trân trọng,<br>Đội ngũ STMSUAI - Admin Minh</p>
         """
         mail.send(msg)
+        print(f"✅ Đã gửi mail reset tới: {email}")
         return jsonify({"message": "Đã gửi link đặt lại mật khẩu qua email."}), 200
     except Exception as e:
-        print(f"Lỗi gửi mail: {e}")
-        return jsonify({"message": f"Lỗi máy chủ khi gửi mail: {e}"}), 500
-
+        print(f"❌ Lỗi gửi mail: {e}")
+        # In traceback để debug trên Render Logs
+        traceback.print_exc()
+        return jsonify({"message": f"Lỗi máy chủ khi gửi mail: {str(e)}"}), 500
+    finally:
+        # Đảm bảo đóng DB session dù có lỗi hay không
+        if db:
+            db.close()
 
 # ✅ API 2: Xử lý reset mật khẩu
 @app.route('/api/reset-password', methods=['POST'])
